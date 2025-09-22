@@ -1,5 +1,6 @@
 package com.mini2550.CourtCaseManagementSystem.Security;
 
+import com.mini2550.CourtCaseManagementSystem.Dtos.ClientDto;
 import com.mini2550.CourtCaseManagementSystem.Enums.UserType;
 import com.mini2550.CourtCaseManagementSystem.Models.User;
 import com.mini2550.CourtCaseManagementSystem.Security.Dto.AuthenticationRequest;
@@ -52,6 +53,11 @@ public class AuthController {
     @PostMapping("/extractEmail")
     public ResponseEntity<String> printEmailUsingBody(@RequestBody ExtractEmailDto extractEmailDto) {
         return authenticationService.getEmailFromTokenUsingBody(extractEmailDto);
+    }
+    @PostMapping("/register-client")
+    public ResponseEntity<String> registerClient(ClientDto client){
+        authenticationService.registerClient(client);
+        return ResponseEntity.ok("client registered successfully");
     }
 
 }

@@ -2,7 +2,7 @@ package com.mini2550.CourtCaseManagementSystem.Controllers;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseFileRequestDto;
-import com.mini2550.CourtCaseManagementSystem.Dtos.DocumentDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.ClientDto;
 import com.mini2550.CourtCaseManagementSystem.Services.ClientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,22 +24,16 @@ public class ClientController {
 
     // ✅ File a new case
     @PostMapping("/file-case")
-    public ResponseEntity<String> fileCase(@RequestBody CaseFileRequestDto dto,
-                                           Principal principal) {
-        clientService.fileCase(dto, principal.getName());
+    public ResponseEntity<String> fileCase(@RequestBody CaseFileRequestDto dto) {
+        clientService.fileCase(dto);
         return ResponseEntity.ok("Case filed successfully");
     }
 
     // ✅ View my cases
     @GetMapping("/my-cases")
-    public ResponseEntity<List<CaseDto>> getMyCases(Principal principal) {
-        return ResponseEntity.ok(clientService.getMyCases(principal.getName()));
+    public ResponseEntity<List<CaseDto>> getMyCases() {
+        return ResponseEntity.ok(clientService.getMyCases());
     }
 
-    // ✅ Upload a document for a case
-    @PostMapping("/{caseId}/upload")
-    public ResponseEntity<DocumentDto> uploadDocument(@PathVariable Long caseId,
-                                                      @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(clientService.uploadDocument(caseId, file));
-    }
+
 }

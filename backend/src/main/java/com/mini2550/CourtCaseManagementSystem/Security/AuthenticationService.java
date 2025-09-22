@@ -1,5 +1,7 @@
 package com.mini2550.CourtCaseManagementSystem.Security;
 
+import com.mini2550.CourtCaseManagementSystem.Dtos.ClientDto;
+import com.mini2550.CourtCaseManagementSystem.Enums.UserType;
 import com.mini2550.CourtCaseManagementSystem.Models.User;
 import com.mini2550.CourtCaseManagementSystem.Repositories.UserRepository;
 import com.mini2550.CourtCaseManagementSystem.Security.Dto.AuthenticationRequest;
@@ -88,4 +90,20 @@ public class AuthenticationService {
         String jwtUserId = jwtService.extractId(extractEmailDto.token);
         return ResponseEntity.ok(Long.valueOf(jwtUserId));
     }
+
+    public void registerClient(ClientDto client) {
+        try {
+            User user = new User();
+            user.setEmail(client.getEmail());
+            user.setPassword(passwordEncoder.encode(client.getPassword()));
+            user.setUserType(UserType.CLIENT);
+            user.setName(client.getName());
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Email already exists: " + client.getEmail());
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred during registration.", e);
+        }
+    }
+
 }

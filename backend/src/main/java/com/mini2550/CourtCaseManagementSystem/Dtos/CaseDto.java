@@ -9,7 +9,10 @@ public class CaseDto {
     private String title;
     private String type;
     private String clientName;
-    private String lawyerName;
+    private String clientLawyerId;
+    private String opposingLawyerId;
+    private String clientLawyerName;
+    private String opposingLawyerName;
     private String judgeName;
     private CaseStatus status;
     private LocalDate nextHearingDate;
@@ -54,12 +57,20 @@ public class CaseDto {
         this.clientName = clientName;
     }
 
-    public String getLawyerName() {
-        return lawyerName;
+    public String getClientLawyerId() {
+        return clientLawyerId;
     }
 
-    public void setLawyerName(String lawyerName) {
-        this.lawyerName = lawyerName;
+    public void setClientLawyerId(String clientLawyerId) {
+        this.clientLawyerId = clientLawyerId;
+    }
+
+    public String getOpposingLawyerId() {
+        return opposingLawyerId;
+    }
+
+    public void setOpposingLawyerId(String opposingLawyerId) {
+        this.opposingLawyerId = opposingLawyerId;
     }
 
     public String getJudgeName() {
@@ -76,5 +87,21 @@ public class CaseDto {
 
     public void setNextHearingDate(LocalDate nextHearingDate) {
         this.nextHearingDate = nextHearingDate;
+    }
+
+    public String getClientLawyerName() {
+        return clientLawyerName;
+    }
+
+    public void setClientLawyerName(String clientLawyerName) {
+        this.clientLawyerName = clientLawyerName;
+    }
+
+    public String getOpposingLawyerName() {
+        return opposingLawyerName;
+    }
+
+    public void setOpposingLawyerName(String opposingLawyerName) {
+        this.opposingLawyerName = opposingLawyerName;
     }
 }

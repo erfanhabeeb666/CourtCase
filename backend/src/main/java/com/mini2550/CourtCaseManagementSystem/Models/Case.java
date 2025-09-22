@@ -2,9 +2,8 @@ package com.mini2550.CourtCaseManagementSystem.Models;
 
 import com.mini2550.CourtCaseManagementSystem.Enums.CaseStatus;
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
-
+    @Table(name = "CourtCase")
     @Entity
     public class Case {
         @Id
@@ -16,12 +15,13 @@ import java.time.LocalDate;
 
         private String description;
 
-        @ManyToOne
+        @OneToOne
         private User client;
 
         @ManyToOne
-        private User lawyer;
-
+        private User clientLawyer;
+        @ManyToOne
+        private User opposingLawyer;
         @ManyToOne
         private User judge;
 
@@ -61,13 +61,6 @@ import java.time.LocalDate;
             this.client = client;
         }
 
-        public User getLawyer() {
-            return lawyer;
-        }
-
-        public void setLawyer(User lawyer) {
-            this.lawyer = lawyer;
-        }
 
         public User getJudge() {
             return judge;
@@ -102,4 +95,20 @@ import java.time.LocalDate;
         }
         // getters/setters
 
+
+        public User getClientLawyer() {
+            return clientLawyer;
+        }
+
+        public void setClientLawyer(User clientLawyer) {
+            this.clientLawyer = clientLawyer;
+        }
+
+        public User getOpposingLawyer() {
+            return opposingLawyer;
+        }
+
+        public void setOpposingLawyer(User opposingLawyer) {
+            this.opposingLawyer = opposingLawyer;
+        }
     }
