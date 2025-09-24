@@ -2,6 +2,7 @@ package com.mini2550.CourtCaseManagementSystem.Controllers;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseFileRequestDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.UserSummaryDto;
 import com.mini2550.CourtCaseManagementSystem.Services.ClientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +29,11 @@ public class ClientController {
     @GetMapping("/my-cases")
     public ResponseEntity<List<CaseDto>> getMyCases() {
         return ResponseEntity.ok(clientService.getMyCases());
+    }
+
+    @GetMapping("/lawyers")
+    public ResponseEntity<List<UserSummaryDto>> listLawyers() {
+        return ResponseEntity.ok(clientService.listLawyers());
     }
 
 

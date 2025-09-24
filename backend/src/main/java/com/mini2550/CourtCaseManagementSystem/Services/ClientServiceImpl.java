@@ -2,6 +2,7 @@ package com.mini2550.CourtCaseManagementSystem.Services;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseFileRequestDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.UserSummaryDto;
 import com.mini2550.CourtCaseManagementSystem.Enums.CaseStatus;
 import com.mini2550.CourtCaseManagementSystem.Enums.Status;
 import com.mini2550.CourtCaseManagementSystem.Models.Case;
@@ -83,6 +84,19 @@ public class ClientServiceImpl implements ClientService {
             dto.setNextHearingDate(c.getNextHearingDate());
             dto.setVerdict(c.getVerdict());
             dto.setVerdictDate(c.getVerdictDate());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserSummaryDto> listLawyers() {
+        return lawyerRepository.findAll().stream().map(lawyer -> {
+            UserSummaryDto dto = new UserSummaryDto();
+            dto.setId(lawyer.getId());
+            dto.setName(lawyer.getName());
+            dto.setEmail(lawyer.getEmail());
+            dto.setUserType(lawyer.getUserType() != null ? lawyer.getUserType().name() : "LAWYER");
+            dto.setStatus(lawyer.getStatus());
             return dto;
         }).collect(Collectors.toList());
     }

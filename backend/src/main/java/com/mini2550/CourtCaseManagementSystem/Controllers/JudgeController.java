@@ -4,6 +4,7 @@ import com.mini2550.CourtCaseManagementSystem.Dtos.UploadDocumentRequest;
 import com.mini2550.CourtCaseManagementSystem.Dtos.HearingDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.DocumentDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.HearingUpdateRequest;
+import com.mini2550.CourtCaseManagementSystem.Dtos.HearingWithCaseDto;
 import com.mini2550.CourtCaseManagementSystem.Services.JudgeService;
 
 import java.util.List;
@@ -44,5 +45,15 @@ public class JudgeController {
     @GetMapping("/cases/{caseId}/documents")
     public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable Long caseId) {
         return ResponseEntity.ok(judgeService.getDocuments(caseId));
+    }
+
+    @GetMapping("/hearings/today")
+    public ResponseEntity<List<HearingWithCaseDto>> listTodaysHearings() {
+        return ResponseEntity.ok(judgeService.listTodaysHearings());
+    }
+
+    @GetMapping("/my-cases")
+    public ResponseEntity<List<com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto>> myCases() {
+        return ResponseEntity.ok(judgeService.listMyCases());
     }
 }

@@ -117,11 +117,14 @@ public class AuthenticationService {
     }
     public void registerLawyer(UserDto user) {
         try {
-            Lawyer lawyer = new Lawyer(user.getLegalIdentity());
+            Lawyer lawyer = new Lawyer();
             lawyer.setEmail(user.getEmail());
             lawyer.setPassword(passwordEncoder.encode(user.getPassword()));
             lawyer.setUserType(UserType.LAWYER);
-            lawyer.setName(lawyer.getName());
+            // Use the provided name from DTO
+            lawyer.setName(user.getName());
+            lawyer.setLegalIdentity(user.getLegalIdentity());
+            // Ensure status is ACTIVE
             lawyer.setStatus(Status.ACTIVE);
             lawyerRepository.save(lawyer);
         } catch (DataIntegrityViolationException e) {

@@ -11,4 +11,6 @@ import java.util.List;
 public interface HearingRepository extends JpaRepository<Hearing,Long> {
     List<Hearing> findByCourtCaseOrderByHearingDateAsc(Case courtCase);
     boolean existsByCourtCaseAndHearingDate(Case courtCase, LocalDate hearingDate);
+    List<Hearing> findByHearingDateAndCourtCase_Judge_Id(LocalDate hearingDate, Long judgeId);
+    List<Hearing> findByCourtCaseAndHearingDateAfterOrderByHearingDateAsc(Case courtCase, LocalDate date);
 }

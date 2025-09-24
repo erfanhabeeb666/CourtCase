@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface CaseRepository extends JpaRepository<Case, Long> {
     List<Case> findByClient(User client);
+    List<Case> findByJudge_Id(Long judgeId);
 }

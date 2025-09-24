@@ -6,9 +6,8 @@ import jakarta.persistence.Entity;
 @Entity
 public class Lawyer extends User {
     public String legalIdentity;
-    public Lawyer(String legalIdentity) {
+    public Lawyer() {
         super();
-        this.legalIdentity=legalIdentity;
     }
 
     public String getLegalIdentity() {

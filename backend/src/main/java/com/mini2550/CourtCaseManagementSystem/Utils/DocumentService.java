@@ -19,25 +19,37 @@ public class DocumentService {
 
     public void saveDocument(Case courtCase, MultipartFile file, String note, User user) {
         try {
-            Path caseDir = Paths.get("uploads/cases/" + courtCase.getId());
-            if (!Files.exists(caseDir)) {
-                Files.createDirectories(caseDir);
+            // Base directory rooted at the application working directory to avoid container temp dirs
+            String base = System.getProperty("user.dir");
+            Path caseDir = Paths.get(base, "uploads", "cases", String.valueOf(courtCase.getId()));
+
+            // Ensure directory exists
+            Files.createDirectories(caseDir);
+
+            // Sanitize filename (remove any path separators)
+            String originalName = file.getOriginalFilename();
+            String safeName = (originalName == null ? "upload" : originalName).replace("\\", "_").replace("/", "_");
+
+            Path filePath = caseDir.resolve(safeName);
+            // Ensure parent directories for safety
+            Files.createDirectories(filePath.getParent());
+
+            // Copy stream (more robust than transferTo across temp/filesystems)
+            try (var in = file.getInputStream()) {
+                Files.copy(in, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
 
-            Path filePath = caseDir.resolve(file.getOriginalFilename());
-            file.transferTo(filePath.toFile());
-
-            // Optionally: save file metadata in DB (filename, uploader, timestamp, note)
+            // Save metadata
             Document doc = new Document();
             doc.setCourtCase(courtCase);
-            doc.setFileName(file.getOriginalFilename());
+            doc.setFileName(safeName);
             doc.setFilePath(filePath.toString());
             doc.setUploaderId(user.getId());
             doc.setNote(note);
             documentRepository.save(doc);
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to save file: " + e.getMessage());
+            throw new RuntimeException("Failed to save file to target path. Reason: " + e.getMessage());
         }
     }
 

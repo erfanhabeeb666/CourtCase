@@ -1,6 +1,7 @@
 package com.mini2550.CourtCaseManagementSystem.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.mini2550.CourtCaseManagementSystem.Enums.HearingStatus;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,6 +25,9 @@ public class Hearing {
     private String judgeSummary;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Enumerated(EnumType.STRING)
+    private HearingStatus status = HearingStatus.SCHEDULED;
 
     public Long getId() {
         return id;
@@ -63,5 +67,13 @@ public class Hearing {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public HearingStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(HearingStatus status) {
+        this.status = status;
     }
 }

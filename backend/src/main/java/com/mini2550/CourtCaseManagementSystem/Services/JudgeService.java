@@ -13,6 +13,7 @@ import com.mini2550.CourtCaseManagementSystem.Dtos.DocumentDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.HearingDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.HearingUpdateRequest;
 import com.mini2550.CourtCaseManagementSystem.Dtos.NextHearingRequest;
+import com.mini2550.CourtCaseManagementSystem.Dtos.HearingWithCaseDto;
 import com.mini2550.CourtCaseManagementSystem.Enums.CaseStatus;
 import com.mini2550.CourtCaseManagementSystem.Models.Case;
 import com.mini2550.CourtCaseManagementSystem.Models.Document;
@@ -23,6 +24,7 @@ import com.mini2550.CourtCaseManagementSystem.Repositories.DocumentRepository;
 import com.mini2550.CourtCaseManagementSystem.Repositories.HearingRepository;
 import com.mini2550.CourtCaseManagementSystem.Repositories.UserRepository;
 import com.mini2550.CourtCaseManagementSystem.Dtos.VerdictUpdateRequest;
+import com.mini2550.CourtCaseManagementSystem.Enums.HearingStatus;
 import com.mini2550.CourtCaseManagementSystem.Security.JwtService;
 import com.mini2550.CourtCaseManagementSystem.Security.JwtUtils;
 import com.mini2550.CourtCaseManagementSystem.Utils.FileUploadUtil;
@@ -79,6 +81,7 @@ public class JudgeService {
         hearing.setCourtCase(courtCase);
         hearing.setHearingDate(request.getNextHearingDate());
         hearing.setJudgeSummary(request.getJudgeSummary());
+        hearing.setStatus(HearingStatus.SCHEDULED);
         hearingRepository.save(hearing);
 
         courtCase.setNextHearingDate(request.getNextHearingDate());
@@ -116,20 +119,41 @@ public class JudgeService {
             return toHearingDto(hearing);
         }
 
-        // If judge provided next hearing date, create it only if case is not closed and no verdict exists
+        // If judge provided next hearing date, COMPLETE the current hearing and CREATE a new next hearing.
         if (request.getNextHearingDate() != null) {
             if (courtCase.getStatus() == CaseStatus.CLOSED || courtCase.getVerdict() != null) {
                 throw new RuntimeException("Cannot schedule next hearing: case is closed or already has a verdict.");
             }
+            // Prevent duplicate hearing on the same date for this case
             if (hearingRepository.existsByCourtCaseAndHearingDate(courtCase, request.getNextHearingDate())) {
                 throw new RuntimeException("A hearing is already scheduled for this date.");
             }
+            hearing.setJudgeSummary(request.getJudgeSummary());
+            // Mark current hearing as COMPLETED (preserving log)
+            hearing.setStatus(HearingStatus.COMPLETED);
+            hearingRepository.save(hearing);
+
+            // Create the next SCHEDULED hearing on the provided date
             Hearing next = new Hearing();
             next.setCourtCase(courtCase);
             next.setHearingDate(request.getNextHearingDate());
+            next.setStatus(HearingStatus.SCHEDULED);
             hearingRepository.save(next);
+
+            // Keep the case in sync with the next hearing date
             courtCase.setNextHearingDate(request.getNextHearingDate());
             caseRepository.save(courtCase);
+
+            // Ensure only ONE future hearing exists for this case: remove any other future hearings except the one we just created
+            LocalDate today = LocalDate.now();
+            List<Hearing> futureHearings = hearingRepository
+                    .findByCourtCaseAndHearingDateAfterOrderByHearingDateAsc(courtCase, today);
+            List<Hearing> toDelete = futureHearings.stream()
+                    .filter(h2 -> !h2.getId().equals(next.getId()))
+                    .collect(Collectors.toList());
+            if (!toDelete.isEmpty()) {
+                hearingRepository.deleteAll(toDelete);
+            }
         }
         return toHearingDto(hearing);
     }
@@ -152,6 +176,35 @@ public class JudgeService {
         return documentRepository.findByCourtCase(courtCase).stream().map(this::toDocumentDto).collect(Collectors.toList());
     }
 
+    public List<com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto> listMyCases() {
+        User judge = getCurrentUser();
+        List<Case> cases = caseRepository.findByJudge_Id(judge.getId());
+        return cases.stream().map(this::toCaseDto).collect(Collectors.toList());
+    }
+
+    public List<HearingWithCaseDto> listTodaysHearings() {
+        User judge = getCurrentUser();
+        LocalDate today = LocalDate.now();
+        List<Hearing> hearings = hearingRepository.findByHearingDateAndCourtCase_Judge_Id(today, judge.getId());
+        // Exclude hearings whose cases are already closed or have a verdict
+        return hearings.stream()
+                .filter(h -> {
+                    Case c = h.getCourtCase();
+                    // case must be open and without verdict
+                    if (c.getStatus() == CaseStatus.CLOSED || c.getVerdict() != null) return false;
+                    // only show SCHEDULED hearings in today's list. Treat null (legacy rows) as SCHEDULED.
+                    if (h.getStatus() != null && h.getStatus() != HearingStatus.SCHEDULED) return false;
+                    // if a new next hearing has been scheduled for a future date, hide today's hearing
+                    return c.getNextHearingDate() == null || !c.getNextHearingDate().isAfter(today);
+                })
+                .map(h -> {
+            HearingWithCaseDto d = new HearingWithCaseDto();
+            d.setHearing(toHearingDto(h));
+            d.setCourtCase(toCaseDto(h.getCourtCase()));
+            return d;
+        }).collect(Collectors.toList());
+    }
+
     private User getCurrentUser() {
         Long userId = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(servletRequest)));
         return userRepository.findById(userId).orElseThrow();
@@ -171,6 +224,7 @@ public class JudgeService {
         dto.setHearingDate(h.getHearingDate());
         dto.setJudgeSummary(h.getJudgeSummary());
         dto.setCreatedAt(h.getCreatedAt());
+        dto.setStatus(h.getStatus());
         return dto;
     }
 

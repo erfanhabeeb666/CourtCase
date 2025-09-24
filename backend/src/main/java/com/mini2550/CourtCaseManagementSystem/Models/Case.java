@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-    @Table(name = "CourtCase")
+    @Table(name = "court_case")
     @Entity
     public class Case {
         @Id

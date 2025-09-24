@@ -1,5 +1,6 @@
 package com.mini2550.CourtCaseManagementSystem.Dtos;
 
+import com.mini2550.CourtCaseManagementSystem.Enums.HearingStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -8,6 +9,7 @@ public class HearingDto {
     private LocalDate hearingDate;
     private String judgeSummary;
     private LocalDateTime createdAt;
+    private HearingStatus status;
 
     public Long getId() {
         return id;
@@ -39,5 +41,13 @@ public class HearingDto {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public HearingStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(HearingStatus status) {
+        this.status = status;
     }
 }
