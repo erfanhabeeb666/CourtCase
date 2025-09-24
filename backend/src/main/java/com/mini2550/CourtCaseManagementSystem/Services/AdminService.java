@@ -9,11 +9,14 @@ import com.mini2550.CourtCaseManagementSystem.Enums.UserType;
 import com.mini2550.CourtCaseManagementSystem.Models.Case;
 import com.mini2550.CourtCaseManagementSystem.Models.Judge;
 import com.mini2550.CourtCaseManagementSystem.Models.Lawyer;
+import com.mini2550.CourtCaseManagementSystem.Models.Hearing;
 import com.mini2550.CourtCaseManagementSystem.Repositories.CaseRepository;
 import com.mini2550.CourtCaseManagementSystem.Repositories.JudgeRepository;
 import com.mini2550.CourtCaseManagementSystem.Repositories.LawyerRepository;
+import com.mini2550.CourtCaseManagementSystem.Repositories.HearingRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AdminService {
@@ -21,12 +24,14 @@ public class AdminService {
     private final JudgeRepository judgeRepository;
     private final CaseRepository caseRepository;
     private final LawyerRepository lawyerRepository;
+    private final HearingRepository hearingRepository;
 
-    public AdminService(PasswordEncoder passwordEncoder, JudgeRepository judgeRepository, CaseRepository caseRepository, LawyerRepository lawyerRepository) {
+    public AdminService(PasswordEncoder passwordEncoder, JudgeRepository judgeRepository, CaseRepository caseRepository, LawyerRepository lawyerRepository, HearingRepository hearingRepository) {
         this.passwordEncoder = passwordEncoder;
         this.judgeRepository = judgeRepository;
         this.caseRepository = caseRepository;
         this.lawyerRepository = lawyerRepository;
+        this.hearingRepository = hearingRepository;
     }
     public CaseDto convertToDto(Case courtCase) {
         if (courtCase == null) return null;
@@ -37,6 +42,8 @@ public class AdminService {
         dto.setType(courtCase.getType() != null ? courtCase.getType().name() : null);
         dto.setStatus(courtCase.getStatus());
         dto.setNextHearingDate(courtCase.getNextHearingDate());
+        dto.setVerdict(courtCase.getVerdict());
+        dto.setVerdictDate(courtCase.getVerdictDate());
 
         // Client info
         if (courtCase.getClient() != null) {
@@ -74,6 +81,7 @@ public class AdminService {
         judgeRepository.save(judge);
     }
 
+    @Transactional
     public CaseDto assignCaseByAdmin(Long caseId, AssignCaseRequest request) {
         Case courtCase = caseRepository.findById(caseId)
                 .orElseThrow(() -> new RuntimeException("Case not found"));
@@ -89,7 +97,20 @@ public class AdminService {
         courtCase.setNextHearingDate(request.getNextHearingDate());
         courtCase.setStatus(CaseStatus.ASSIGNED);
 
-        return convertToDto(caseRepository.save(courtCase));
+        Case savedCase = caseRepository.save(courtCase);
+
+        // Automatically create a Hearing record if a next hearing date is provided
+        if (request.getNextHearingDate() != null) {
+            // prevent duplicate hearing on the same date for this case
+            if (!hearingRepository.existsByCourtCaseAndHearingDate(savedCase, request.getNextHearingDate())) {
+                Hearing hearing = new Hearing();
+                hearing.setCourtCase(savedCase);
+                hearing.setHearingDate(request.getNextHearingDate());
+                hearingRepository.save(hearing);
+            }
+        }
+
+        return convertToDto(savedCase);
     }
 
 }

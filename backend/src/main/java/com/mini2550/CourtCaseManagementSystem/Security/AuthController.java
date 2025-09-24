@@ -6,6 +6,8 @@ import com.mini2550.CourtCaseManagementSystem.Models.User;
 import com.mini2550.CourtCaseManagementSystem.Security.Dto.AuthenticationRequest;
 import com.mini2550.CourtCaseManagementSystem.Security.Dto.AuthenticationResponse;
 import com.mini2550.CourtCaseManagementSystem.Security.Dto.ExtractEmailDto;
+import com.mini2550.CourtCaseManagementSystem.Security.Dto.CurrentUserResponse;
+import com.mini2550.CourtCaseManagementSystem.Repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +21,15 @@ public class AuthController {
     private final AuthenticationService authenticationService;
     private final HttpServletRequest request;
     private final JwtUtils jwtUtils;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthenticationService authenticationService, HttpServletRequest request, JwtUtils jwtUtils) {
+    public AuthController(AuthenticationService authenticationService, HttpServletRequest request, JwtUtils jwtUtils, JwtService jwtService, UserRepository userRepository) {
         this.authenticationService = authenticationService;
         this.request = request;
         this.jwtUtils = jwtUtils;
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/registerAdmin")
@@ -37,6 +43,18 @@ public class AuthController {
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@Valid @RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
+    }
+    @GetMapping("/me")
+    public ResponseEntity<CurrentUserResponse> me() {
+        String token = jwtUtils.getJwtFromRequest(request);
+        Long userId = Long.valueOf(jwtService.extractId(token));
+        User user = userRepository.findById(userId).orElseThrow();
+        CurrentUserResponse res = new CurrentUserResponse();
+        res.setId(user.getId());
+        res.setName(user.getName());
+        res.setEmail(user.getEmail());
+        res.setUserType(user.getUserType() != null ? user.getUserType().name() : null);
+        return ResponseEntity.ok(res);
     }
     @GetMapping("/extractId")
     public ResponseEntity<Long> printId() {

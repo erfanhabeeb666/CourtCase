@@ -3,7 +3,6 @@ package com.mini2550.CourtCaseManagementSystem.Controllers;
 import com.mini2550.CourtCaseManagementSystem.Dtos.UploadDocumentRequest;
 import com.mini2550.CourtCaseManagementSystem.Models.User;
 import com.mini2550.CourtCaseManagementSystem.Services.LawyerService;
-import com.mini2550.CourtCaseManagementSystem.Utils.FileUploadUtil;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.ModelAttribute;

@@ -23,9 +23,9 @@ public class FileUploadUtil {
                 .orElseThrow(() -> new RuntimeException("Case not found"));
 
         if (user.getUserType() == UserType.LAWYER) {
-            if (!courtCase.getClientLawyer().getId().equals(user.getId())) {
-                throw new RuntimeException("Not authorized to upload");
-            }
+            boolean isClientLawyer = courtCase.getClientLawyer() != null && courtCase.getClientLawyer().getId().equals(user.getId());
+            boolean isOpposingLawyer = courtCase.getOpposingLawyer() != null && courtCase.getOpposingLawyer().getId().equals(user.getId());
+            if (!isClientLawyer && !isOpposingLawyer) throw new RuntimeException("Not authorized to upload");
         } else if (user.getUserType() == UserType.JUDGE) {
             if (courtCase.getJudge() == null || !courtCase.getJudge().getId().equals(user.getId())) {
                 throw new RuntimeException("Not authorized to upload");

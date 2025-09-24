@@ -1,0 +1,236 @@
+CourtCase Backend - Postman Testing Guide
+
+1) Prerequisites
+- Backend running on Java Spring Boot
+- Database: MySQL at jdbc:mysql://localhost:3306/courtcase (see backend/src/main/resources/application.properties)
+- Server port: 9999
+- Swagger UI (optional): http://localhost:9999/swagger
+
+2) Base URL
+- http://localhost:9999
+
+3) Postman Setup
+- Create a new Postman Environment, e.g., CourtCase Local
+- Variables:
+  - baseUrl = http://localhost:9999
+  - token = (leave empty; will be set by login response test)
+- In your requests, set Authorization tab to Bearer Token and use {{token}} (after login)
+
+Optional: In the login request (Auth -> POST /auth/authenticate), add a Tests tab snippet to store the token:
+
+  const json = pm.response.json();
+  if (json && json.token) {
+    pm.environment.set("token", json.token);
+  }
+
+4) Authentication Endpoints (no token required for authenticate; others require Bearer)
+- Base path: /auth
+
+4.1) Register an Admin
+- Method: POST
+- URL: {{baseUrl}}/auth/registerAdmin
+- Headers: Content-Type: application/json
+- Body (raw JSON):
+  {
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "password": "adminpass",
+    "legalIdentity": "A-123"
+  }
+- Notes: Creates an ADMIN user.
+
+4.2) Authenticate (login)
+- Method: POST
+- URL: {{baseUrl}}/auth/authenticate
+- Headers: Content-Type: application/json
+- Body (raw JSON):
+  {
+    "email": "admin@example.com",
+    "password": "adminpass"
+  }
+- Response: { "token": "<JWT>" }
+- In Tests tab, store token as shown above.
+
+4.3) Get current user (me)
+- Method: GET
+- URL: {{baseUrl}}/auth/me
+- Headers: Authorization: Bearer {{token}}
+- Response: { id, name, email, userType }
+
+4.4) Extract userId from token
+- GET {{baseUrl}}/auth/extractId
+- POST {{baseUrl}}/auth/extractId  with body: { "token": "<optional depending on implementation>" }
+- Headers: Authorization: Bearer {{token}} for GET; POST uses body DTO ExtractEmailDto if implemented that way.
+
+4.5) Extract email from token
+- GET {{baseUrl}}/auth/extractEmail
+- POST {{baseUrl}}/auth/extractEmail body: { "token": "..." } (uses ExtractEmailDto)
+
+4.6) Register Client (as Admin flow or open endpoint)
+- Method: POST
+- URL: {{baseUrl}}/auth/register-client
+- Headers: Content-Type: application/json, Authorization: Bearer {{token}} (if required by security config)
+- Body:
+  {
+    "name": "Client A",
+    "email": "client@example.com",
+    "password": "clientpass",
+    "legalIdentity": "C-111"
+  }
+
+4.7) Register Lawyer
+- Method: POST
+- URL: {{baseUrl}}/auth/register-lawyer
+- Body:
+  {
+    "name": "Lawyer L",
+    "email": "lawyer@example.com",
+    "password": "lawyerpass",
+    "legalIdentity": "L-222"
+  }
+
+5) Admin Endpoints (requires ADMIN authority)
+- Base path: /admin
+- All requests require Authorization: Bearer {{token}} where the token belongs to an ADMIN user.
+
+5.1) Add Judge
+- Method: POST
+- URL: {{baseUrl}}/admin/add-judge
+- Headers: Content-Type: application/json, Authorization: Bearer {{token}}
+- Body:
+  {
+    "name": "Judge Judy",
+    "email": "judge@example.com",
+    "password": "judgepass",
+    "legalIdentity": "J-333"
+  }
+
+5.2) Assign Case to Judge and Opposing Lawyer
+- Method: PUT
+- URL: {{baseUrl}}/admin/cases/{caseId}/assign
+- Path Variables: caseId = e.g., 1
+- Headers: Content-Type: application/json, Authorization: Bearer {{token}}
+- Body (AssignCaseRequest):
+  {
+    "opposingLawyerId": 12,
+    "judgeId": 5,
+    "nextHearingDate": "2025-10-01"
+  }
+- Date format: yyyy-MM-dd (ISO local date)
+
+6) Client Endpoints (requires CLIENT authority)
+- Base path: /client
+- All requests require Authorization: Bearer {{token}} where the token belongs to a CLIENT user.
+
+6.1) File a Case
+- Method: POST
+- URL: {{baseUrl}}/client/file-case
+- Headers: Content-Type: application/json, Authorization: Bearer {{token}}
+- Body (CaseFileRequestDto):
+  {
+    "title": "Property Dispute",
+    "type": "CIVIL",  // from Enums.CaseType
+    "description": "Details of the case",
+    "clientLawyerId": "10"  // lawyer id as string
+  }
+
+6.2) Get My Cases
+- Method: GET
+- URL: {{baseUrl}}/client/my-cases
+- Headers: Authorization: Bearer {{token}}
+- Response: List<CaseDto>
+
+7) Judge Endpoints (requires JUDGE authority)
+- Base path: /judge
+- All requests require Authorization: Bearer {{token}} where the token belongs to a JUDGE user.
+
+7.1) Upload Document to a Case (multipart/form-data)
+- Method: POST
+- URL: {{baseUrl}}/judge/cases/upload-document
+- Headers: Authorization: Bearer {{token}}
+- Body (form-data):
+  - Key: caseId (type: text) value: 1
+  - Key: file (type: file) value: select a file
+  - Key: note (type: text) value: "Optional note"
+- DTO: UploadDocumentRequest { caseId: Long, file: MultipartFile, note: String }
+
+7.2) Get Hearings for a Case
+- Method: GET
+- URL: {{baseUrl}}/judge/cases/{caseId}/hearings
+- Headers: Authorization: Bearer {{token}}
+- Response: List<HearingDto> (id, hearingDate, judgeSummary, createdAt)
+
+7.3) Update a Hearing (unified update)
+- Method: PUT
+- URL: {{baseUrl}}/judge/cases/{caseId}/hearings/{hearingId}
+- Headers: Content-Type: application/json, Authorization: Bearer {{token}}
+- Body (HearingUpdateRequest):
+  {
+    "hearingId": 3,
+    "hearingDate": "2025-10-02",     // optional
+    "judgeSummary": "Discussion and submissions.", // optional
+    "nextHearingDate": "2025-10-20",  // optional
+    "verdict": null,                   // or a string to close case
+    "verdictDate": null                // optional; defaults to today if verdict provided
+  }
+- Notes: Provide only the fields you intend to update; others can be null.
+
+7.4) Get Case Documents
+- Method: GET
+- URL: {{baseUrl}}/judge/cases/{caseId}/documents
+- Headers: Authorization: Bearer {{token}}
+- Response: List<DocumentDto> (id, fileName, filePath, note, uploaderId, uploadedAt)
+
+8) Lawyer Endpoints (requires LAWYER authority)
+- Base path: /lawyer
+
+8.1) Upload Document to a Case (multipart/form-data)
+- Method: POST
+- URL: {{baseUrl}}/lawyer/cases/upload-document
+- Headers: Authorization: Bearer {{token}}
+- Body (form-data):
+  - Key: caseId (text)
+  - Key: file (file)
+  - Key: note (text)
+
+9) Roles and Authorization
+- Endpoints are protected with @PreAuthorize roles:
+  - /admin/** -> ADMIN
+  - /client/** -> CLIENT
+  - /judge/** -> JUDGE
+  - /lawyer/** -> LAWYER
+- Ensure you authenticate as the appropriate user to get a token with the required authority.
+
+10) Date/Time Formats
+- LocalDate fields use ISO-8601 format: yyyy-MM-dd
+- LocalDateTime fields (if present in responses) are typically ISO format, e.g., 2025-09-24T10:30:00
+
+11) Common Issues & Tips
+- 401 Unauthorized: Missing or invalid Authorization header. Ensure Bearer {{token}} is set and not expired.
+- 403 Forbidden: Authenticated user lacks required authority for the endpoint. Log in with a different role.
+- 400 Bad Request: Check body field names and types against DTOs.
+- Multipart uploads: Use form-data; ensure the file param is of type "File" in Postman.
+- CORS settings (for frontend): backend allows http://localhost:5173 (see Config/CorsConfig.java). Not relevant for Postman.
+
+12) Quick Smoke Test Sequence
+1. Register Admin -> /auth/registerAdmin
+2. Authenticate as Admin -> /auth/authenticate (store token)
+3. Add Judge -> /admin/add-judge
+4. Register Lawyer -> /auth/register-lawyer
+5. Register Client -> /auth/register-client
+6. Authenticate as Client -> get CLIENT token
+7. Client files a case -> /client/file-case
+8. Authenticate as Admin -> assign case -> /admin/cases/{caseId}/assign
+9. Authenticate as Judge -> upload doc -> /judge/cases/upload-document
+10. Judge get hearings -> /judge/cases/{caseId}/hearings
+11. Judge update hearing -> /judge/cases/{caseId}/hearings/{hearingId}
+12. Judge get documents -> /judge/cases/{caseId}/documents
+
+Appendix: DTO Field References
+- AuthenticationRequest: { email: string, password: string }
+- AuthenticationResponse: { token: string }
+- UserDto: { name: string, email: string, password: string, legalIdentity: string }
+- CaseFileRequestDto: { title: string, type: CaseType, description: string, clientLawyerId: string }
+- AssignCaseRequest: { opposingLawyerId: Long, judgeId: Long, nextHearingDate: LocalDate }
+- HearingUpdateRequest: { hearingId: Long, hearingDate?: LocalDate, judgeSummary?: string, nextHearingDate?: LocalDate, verdict?: string, verdictDate?: LocalDate }
+- UploadDocumentRequest (multipart): { caseId: Long, file: File, note?: string }

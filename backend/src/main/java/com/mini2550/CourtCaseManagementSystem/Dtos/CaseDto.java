@@ -16,6 +16,8 @@ public class CaseDto {
     private String judgeName;
     private CaseStatus status;
     private LocalDate nextHearingDate;
+    private String verdict;
+    private LocalDate verdictDate;
 
     public long getId() {
         return id;
@@ -104,4 +106,21 @@ public class CaseDto {
     public void setOpposingLawyerName(String opposingLawyerName) {
         this.opposingLawyerName = opposingLawyerName;
     }
+
+    public String getVerdict() {
+        return verdict;
+    }
+
+    public void setVerdict(String verdict) {
+        this.verdict = verdict;
+    }
+
+    public LocalDate getVerdictDate() {
+        return verdictDate;
+    }
+
+    public void setVerdictDate(LocalDate verdictDate) {
+        this.verdictDate = verdictDate;
+    }
 }
+

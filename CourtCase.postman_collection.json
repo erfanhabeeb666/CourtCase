@@ -1,0 +1,241 @@
+{
+  "info": {
+    "_postman_id": "6f0aef4b-1fda-4e5e-8c01-cc-col-courtcase",
+    "name": "CourtCase Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for CourtCase backend APIs"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/registerAdmin", "host": ["{{baseUrl}}"], "path": ["auth", "registerAdmin"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpass\",\n  \"legalIdentity\": \"A-123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Authenticate (Login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/authenticate", "host": ["{{baseUrl}}"], "path": ["auth", "authenticate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpass\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.token) { pm.environment.set('token', json.token); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Extract Id",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/auth/extractId", "host": ["{{baseUrl}}"], "path": ["auth", "extractId"] }
+          }
+        },
+        {
+          "name": "Extract Email",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/auth/extractEmail", "host": ["{{baseUrl}}"], "path": ["auth", "extractEmail"] }
+          }
+        },
+        {
+          "name": "Register Client",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/register-client", "host": ["{{baseUrl}}"], "path": ["auth", "register-client"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Client A\",\n  \"email\": \"client@example.com\",\n  \"password\": \"clientpass\",\n  \"legalIdentity\": \"C-111\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Lawyer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/register-lawyer", "host": ["{{baseUrl}}"], "path": ["auth", "register-lawyer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lawyer L\",\n  \"email\": \"lawyer@example.com\",\n  \"password\": \"lawyerpass\",\n  \"legalIdentity\": \"L-222\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Add Judge",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/add-judge", "host": ["{{baseUrl}}"], "path": ["admin", "add-judge"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Judge Judy\",\n  \"email\": \"judge@example.com\",\n  \"password\": \"judgepass\",\n  \"legalIdentity\": \"J-333\"\n}" }
+          }
+        },
+        {
+          "name": "Assign Case",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/cases/:caseId/assign", "host": ["{{baseUrl}}"], "path": ["admin", "cases", ":caseId", "assign"], "variable": [{ "key": "caseId", "value": "1" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"opposingLawyerId\": 12,\n  \"judgeId\": 5,\n  \"nextHearingDate\": \"2025-10-01\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client",
+      "item": [
+        {
+          "name": "File Case",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/client/file-case", "host": ["{{baseUrl}}"], "path": ["client", "file-case"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Property Dispute\",\n  \"type\": \"CIVIL\",\n  \"description\": \"Details of the case\",\n  \"clientLawyerId\": \"10\"\n}"
+            }
+          }
+        },
+        {
+          "name": "My Cases",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/client/my-cases", "host": ["{{baseUrl}}"], "path": ["client", "my-cases"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Judge",
+      "item": [
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/judge/cases/upload-document", "host": ["{{baseUrl}}"], "path": ["judge", "cases", "upload-document"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "caseId", "value": "1", "type": "text" },
+                { "key": "file", "type": "file", "src": [] },
+                { "key": "note", "value": "Optional note", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Hearings",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/judge/cases/:caseId/hearings", "host": ["{{baseUrl}}"], "path": ["judge", "cases", ":caseId", "hearings"], "variable": [{ "key": "caseId", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Update Hearing",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/judge/cases/:caseId/hearings/:hearingId", "host": ["{{baseUrl}}"], "path": ["judge", "cases", ":caseId", "hearings", ":hearingId"], "variable": [ { "key": "caseId", "value": "1" }, { "key": "hearingId", "value": "1" } ] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hearingId\": 1,\n  \"hearingDate\": \"2025-10-02\",\n  \"judgeSummary\": \"Discussion and submissions.\",\n  \"nextHearingDate\": \"2025-10-20\",\n  \"verdict\": null,\n  \"verdictDate\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Case Documents",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/judge/cases/:caseId/documents", "host": ["{{baseUrl}}"], "path": ["judge", "cases", ":caseId", "documents"], "variable": [{ "key": "caseId", "value": "1" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lawyer",
+      "item": [
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+            "url": { "raw": "{{baseUrl}}/lawyer/cases/upload-document", "host": ["{{baseUrl}}"], "path": ["lawyer", "cases", "upload-document"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "caseId", "value": "1", "type": "text" },
+                { "key": "file", "type": "file", "src": [] },
+                { "key": "note", "value": "Optional note", "type": "text" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

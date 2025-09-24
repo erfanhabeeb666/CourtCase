@@ -6,6 +6,8 @@ import com.mini2550.CourtCaseManagementSystem.Enums.CaseType;
 import com.mini2550.CourtCaseManagementSystem.Enums.Status;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
     @Table(name = "CourtCase")
     @Entity
     public class Case {
@@ -36,6 +38,15 @@ import java.time.LocalDate;
 
         private LocalDate nextHearingDate;
         private Status deleteStatus;
+
+        // Verdict information
+        private String verdict;
+        private LocalDate verdictDate;
+
+        // Hearings associated with this case
+        @OneToMany(mappedBy = "courtCase", cascade = CascadeType.ALL, orphanRemoval = true)
+        @JsonIgnoreProperties({"courtCase"})
+        private List<Hearing> hearings = new ArrayList<>();
 
         public Status getDeleteStatus() {
             return deleteStatus;
@@ -78,7 +89,7 @@ import java.time.LocalDate;
         }
 
 
-        public User getJudge() {
+        public Judge getJudge() {
             return judge;
         }
 
@@ -127,4 +138,29 @@ import java.time.LocalDate;
         public void setOpposingLawyer(Lawyer opposingLawyer) {
             this.opposingLawyer = opposingLawyer;
         }
+
+        public String getVerdict() {
+            return verdict;
+        }
+
+        public void setVerdict(String verdict) {
+            this.verdict = verdict;
+        }
+
+        public LocalDate getVerdictDate() {
+            return verdictDate;
+        }
+
+        public void setVerdictDate(LocalDate verdictDate) {
+            this.verdictDate = verdictDate;
+        }
+
+        public List<Hearing> getHearings() {
+            return hearings;
+        }
+
+        public void setHearings(List<Hearing> hearings) {
+            this.hearings = hearings;
+        }
     }
+

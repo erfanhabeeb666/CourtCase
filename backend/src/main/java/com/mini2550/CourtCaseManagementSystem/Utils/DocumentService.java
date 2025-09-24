@@ -30,6 +30,7 @@ public class DocumentService {
             // Optionally: save file metadata in DB (filename, uploader, timestamp, note)
             Document doc = new Document();
             doc.setCourtCase(courtCase);
+            doc.setFileName(file.getOriginalFilename());
             doc.setFilePath(filePath.toString());
             doc.setUploaderId(user.getId());
             doc.setNote(note);

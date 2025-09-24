@@ -1,15 +1,20 @@
 package com.mini2550.CourtCaseManagementSystem.Controllers;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.UploadDocumentRequest;
-import com.mini2550.CourtCaseManagementSystem.Models.Judge;
-import com.mini2550.CourtCaseManagementSystem.Models.User;
+import com.mini2550.CourtCaseManagementSystem.Dtos.HearingDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.DocumentDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.HearingUpdateRequest;
 import com.mini2550.CourtCaseManagementSystem.Services.JudgeService;
-import com.mini2550.CourtCaseManagementSystem.Utils.FileUploadUtil;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/judge")
+@PreAuthorize("hasAuthority('JUDGE')")
 public class JudgeController {
 
     private final JudgeService judgeService;
@@ -21,8 +26,23 @@ public class JudgeController {
     public void uploadDocument(@ModelAttribute UploadDocumentRequest request) {
         judgeService.uploadDocument(request);
     }
-    @PutMapping("/cases/update-hearing")
-    public void updateHearing(@RequestBody HearingUpdateRequest request) {
-        caseService.updateHearing(request, judge);
+
+    @GetMapping("/cases/{caseId}/hearings")
+    public ResponseEntity<List<HearingDto>> getHearings(@PathVariable Long caseId) {
+        return ResponseEntity.ok(judgeService.getHearings(caseId));
+    }
+
+    // Unified update hearing API: update hearing details, schedule next, or submit verdict
+    @PutMapping("/cases/{caseId}/hearings/{hearingId}")
+    public ResponseEntity<HearingDto> updateHearing(
+            @PathVariable Long caseId,
+            @PathVariable Long hearingId,
+            @RequestBody HearingUpdateRequest request) {
+        return ResponseEntity.ok(judgeService.updateHearing(caseId, hearingId, request));
+    }
+
+    @GetMapping("/cases/{caseId}/documents")
+    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable Long caseId) {
+        return ResponseEntity.ok(judgeService.getDocuments(caseId));
     }
 }

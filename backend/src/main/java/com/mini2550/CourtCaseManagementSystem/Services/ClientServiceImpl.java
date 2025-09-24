@@ -81,6 +81,8 @@ public class ClientServiceImpl implements ClientService {
             dto.setOpposingLawyerName(c.getOpposingLawyer() != null ? c.getOpposingLawyer().getName() : null);
             dto.setJudgeName(c.getJudge() != null ? c.getJudge().getName() : null);
             dto.setNextHearingDate(c.getNextHearingDate());
+            dto.setVerdict(c.getVerdict());
+            dto.setVerdictDate(c.getVerdictDate());
             return dto;
         }).collect(Collectors.toList());
     }
