@@ -2,12 +2,10 @@ package com.mini2550.CourtCaseManagementSystem.Models;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-@DiscriminatorValue("ADMIN")
+@DiscriminatorValue("JUDGE")
 @Entity
-public class Admin extends User {
-
-
-    Admin() {
+public class Judge extends User {
+    public Judge(){
         super();
     }
 }

@@ -4,6 +4,7 @@ public class CaseFileRequestDto {
     private String title;
     private String type;
     private String description;
+    private String clientLawyerId;
 
     public String getTitle() {
         return title;
@@ -27,5 +28,13 @@ public class CaseFileRequestDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getClientLawyerId() {
+        return clientLawyerId;
+    }
+
+    public void setClientLawyerId(String clientLawyerId) {
+        this.clientLawyerId = clientLawyerId;
     }
 }

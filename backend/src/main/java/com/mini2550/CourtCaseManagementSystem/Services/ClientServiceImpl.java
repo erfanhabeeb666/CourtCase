@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,16 +36,23 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public void fileCase(CaseFileRequestDto dto) {
-        // ✅ Get user by ID from JWT
         Long clientId = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
         User client = userRepository.findById(clientId).orElseThrow();
-
         Case c = new Case();
         c.setTitle(dto.getTitle());
         c.setType(dto.getType());
         c.setDescription(dto.getDescription());
         c.setClient(client);
         c.setStatus(CaseStatus.NEW);
+        if(!dto.getClientLawyerId().isEmpty()){
+            Optional<User> optionalUser = userRepository.findById(Long.valueOf(dto.getClientLawyerId()));
+            if(optionalUser.isPresent()){
+                c.setClientLawyer(optionalUser.get());
+            }else{
+                throw new RuntimeException("the specieified client lwayer id is not present in the db");
+            }
+        }
+
 
         caseRepository.save(c);
     }

@@ -1,8 +1,12 @@
 package com.mini2550.CourtCaseManagementSystem.Security;
 
-import com.mini2550.CourtCaseManagementSystem.Dtos.ClientDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.UserDto;
 import com.mini2550.CourtCaseManagementSystem.Enums.UserType;
+import com.mini2550.CourtCaseManagementSystem.Models.Client;
+import com.mini2550.CourtCaseManagementSystem.Models.Lawyer;
 import com.mini2550.CourtCaseManagementSystem.Models.User;
+import com.mini2550.CourtCaseManagementSystem.Repositories.ClientRepository;
+import com.mini2550.CourtCaseManagementSystem.Repositories.LawyerRepository;
 import com.mini2550.CourtCaseManagementSystem.Repositories.UserRepository;
 import com.mini2550.CourtCaseManagementSystem.Security.Dto.AuthenticationRequest;
 import com.mini2550.CourtCaseManagementSystem.Security.Dto.AuthenticationResponse;
@@ -19,18 +23,21 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final UserRepository userRepository;
-
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final ClientRepository clientRepository;
+    private final LawyerRepository lawyerRepository;
 
-    public AuthenticationService(UserRepository userRepository, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
+    public AuthenticationService(UserRepository userRepository, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, JwtUtils jwtUtils, ClientRepository clientRepository, LawyerRepository lawyerRepository) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
+        this.clientRepository = clientRepository;
+        this.lawyerRepository = lawyerRepository;
     }
 
     public User registerUser(User registrationDto) {
@@ -91,16 +98,30 @@ public class AuthenticationService {
         return ResponseEntity.ok(Long.valueOf(jwtUserId));
     }
 
-    public void registerClient(ClientDto client) {
+    public void registerClient(UserDto user) {
         try {
-            User user = new User();
-            user.setEmail(client.getEmail());
-            user.setPassword(passwordEncoder.encode(client.getPassword()));
-            user.setUserType(UserType.CLIENT);
-            user.setName(client.getName());
-            userRepository.save(user);
+            Client client = new Client();
+            client.setEmail(user.getEmail());
+            client.setName(user.getName());
+            client.setPassword(passwordEncoder.encode(user.getPassword()));
+            client.setUserType(UserType.CLIENT);
+            clientRepository.save(client);
         } catch (DataIntegrityViolationException e) {
-            throw new RuntimeException("Email already exists: " + client.getEmail());
+            throw new RuntimeException("Email already exists: " + user.getEmail());
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred during registration.", e);
+        }
+    }
+    public void registerLawyer(UserDto user) {
+        try {
+            Lawyer lawyer = new Lawyer(user.getLegalIdentity());
+            lawyer.setEmail(user.getEmail());
+            lawyer.setPassword(passwordEncoder.encode(user.getPassword()));
+            lawyer.setUserType(UserType.LAWYER);
+            lawyer.setName(lawyer.getName());
+            lawyerRepository.save(lawyer);
+        } catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Email already exists: " + user.getEmail());
         } catch (Exception e) {
             throw new RuntimeException("An error occurred during registration.", e);
         }

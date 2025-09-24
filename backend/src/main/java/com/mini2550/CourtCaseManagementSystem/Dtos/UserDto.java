@@ -1,21 +1,23 @@
 package com.mini2550.CourtCaseManagementSystem.Dtos;
 
 
-public class ClientDto {
+public class UserDto {
 
     private String name;
     private String email;
     private String password;
+    private String legalIdentity;
 
     // Default constructor
-    public ClientDto() {
+    public UserDto() {
     }
 
     // Constructor with fields
-    public ClientDto(String name, String email, String password) {
+    public UserDto(String name, String email, String password,String legalIdentity) {
         this.name = name;
         this.email = email;
         this.password = password;
+        this.legalIdentity=legalIdentity;
     }
 
     // Getters and setters
@@ -25,6 +27,14 @@ public class ClientDto {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getLegalIdentity() {
+        return legalIdentity;
+    }
+
+    public void setLegalIdentity(String legalIdentity) {
+        this.legalIdentity = legalIdentity;
     }
 
     public String getEmail() {
