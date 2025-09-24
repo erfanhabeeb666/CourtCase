@@ -1,6 +1,7 @@
 package com.mini2550.CourtCaseManagementSystem.Security;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.UserDto;
+import com.mini2550.CourtCaseManagementSystem.Enums.Status;
 import com.mini2550.CourtCaseManagementSystem.Enums.UserType;
 import com.mini2550.CourtCaseManagementSystem.Models.Client;
 import com.mini2550.CourtCaseManagementSystem.Models.Lawyer;
@@ -47,6 +48,7 @@ public class AuthenticationService {
             user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
             user.setUserType(registrationDto.getUserType());
             user.setName(registrationDto.getName());
+            user.setStatus(Status.ACTIVE);
             return userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
             throw new RuntimeException("Email already exists: " + registrationDto.getEmail());
@@ -105,6 +107,7 @@ public class AuthenticationService {
             client.setName(user.getName());
             client.setPassword(passwordEncoder.encode(user.getPassword()));
             client.setUserType(UserType.CLIENT);
+            client.setStatus(Status.ACTIVE);
             clientRepository.save(client);
         } catch (DataIntegrityViolationException e) {
             throw new RuntimeException("Email already exists: " + user.getEmail());
@@ -119,6 +122,7 @@ public class AuthenticationService {
             lawyer.setPassword(passwordEncoder.encode(user.getPassword()));
             lawyer.setUserType(UserType.LAWYER);
             lawyer.setName(lawyer.getName());
+            lawyer.setStatus(Status.ACTIVE);
             lawyerRepository.save(lawyer);
         } catch (DataIntegrityViolationException e) {
             throw new RuntimeException("Email already exists: " + user.getEmail());

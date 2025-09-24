@@ -1,5 +1,6 @@
 package com.mini2550.CourtCaseManagementSystem.Models;
 
+import com.mini2550.CourtCaseManagementSystem.Enums.Status;
 import com.mini2550.CourtCaseManagementSystem.Enums.UserType;
 import jakarta.persistence.*;
 
@@ -24,6 +25,15 @@ public class User implements UserDetails {
     private String password;
     @Enumerated(EnumType.STRING)
     private UserType userType;
+    private Status status;
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
     public UserType getUserType() {
         return userType;

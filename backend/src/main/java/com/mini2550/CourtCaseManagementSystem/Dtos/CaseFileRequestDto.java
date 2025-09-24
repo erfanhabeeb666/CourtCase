@@ -1,8 +1,10 @@
 package com.mini2550.CourtCaseManagementSystem.Dtos;
 
+import com.mini2550.CourtCaseManagementSystem.Enums.CaseType;
+
 public class CaseFileRequestDto {
     private String title;
-    private String type;
+    private CaseType type;
     private String description;
     private String clientLawyerId;
 
@@ -14,11 +16,11 @@ public class CaseFileRequestDto {
         this.title = title;
     }
 
-    public String getType() {
+    public CaseType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(CaseType type) {
         this.type = type;
     }
 
