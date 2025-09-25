@@ -59,36 +59,6 @@ public class JudgeService {
 
     // Removed generic addHearing API in favor of scheduling only the next hearing
 
-    /**
-     * Schedule the next hearing with only a next hearing date (and optional summary).
-     * This should be used instead of a general-purpose add hearing API.
-     */
-    public HearingDto scheduleNextHearing(Long caseId, NextHearingRequest request) {
-        User judge = getCurrentUser();
-        Case courtCase = getAuthorizedCase(caseId, judge);
-        if (courtCase.getStatus() == CaseStatus.CLOSED || courtCase.getVerdict() != null) {
-            throw new RuntimeException("Cannot schedule next hearing: case is closed or already has a verdict.");
-        }
-        if (request.getNextHearingDate() == null) {
-            throw new RuntimeException("Validation failed: nextHearingDate is required.");
-        }
-        // prevent duplicate hearing on the same date for this case
-        if (hearingRepository.existsByCourtCaseAndHearingDate(courtCase, request.getNextHearingDate())) {
-            throw new RuntimeException("A hearing is already scheduled for this date.");
-        }
-
-        Hearing hearing = new Hearing();
-        hearing.setCourtCase(courtCase);
-        hearing.setHearingDate(request.getNextHearingDate());
-        hearing.setJudgeSummary(request.getJudgeSummary());
-        hearing.setStatus(HearingStatus.SCHEDULED);
-        hearingRepository.save(hearing);
-
-        courtCase.setNextHearingDate(request.getNextHearingDate());
-        caseRepository.save(courtCase);
-
-        return toHearingDto(hearing);
-    }
 
     public List<HearingDto> getHearings(Long caseId) {
         User judge = getCurrentUser();
@@ -156,18 +126,6 @@ public class JudgeService {
             }
         }
         return toHearingDto(hearing);
-    }
-
-    public com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto updateVerdict(Long caseId, VerdictUpdateRequest request) {
-        User judge = getCurrentUser();
-        Case courtCase = getAuthorizedCase(caseId, judge);
-
-        courtCase.setVerdict(request.getVerdict());
-        courtCase.setVerdictDate(request.getVerdictDate() != null ? request.getVerdictDate() : LocalDate.now());
-        courtCase.setStatus(CaseStatus.CLOSED);
-        courtCase.setNextHearingDate(null);
-        Case saved = caseRepository.save(courtCase);
-        return toCaseDto(saved);
     }
 
     public List<DocumentDto> getDocuments(Long caseId) {

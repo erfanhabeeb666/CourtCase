@@ -7,6 +7,7 @@ import AdminDashboard from './components/AdminDashboard.jsx'
 import LawyerDashboard from './components/LawyerDashboard.jsx'
 import ClientDashboard from './components/ClientDashboard.jsx'
 import SidebarLayout from './components/SidebarLayout.jsx'
+import Landing from './components/Landing.jsx'
 
 function JudgeDashboard({ token }) {
   const sections = [
@@ -33,6 +34,9 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [error, setError] = useState('')
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  // Landing/auth flow
+  const [showAuth, setShowAuth] = useState(false)
+  const [authMode, setAuthMode] = useState('login') // 'login' | 'register'
 
   useEffect(() => {
     if (token) {
@@ -63,7 +67,17 @@ export default function App() {
   }, [theme])
 
   const content = useMemo(() => {
-    if (!token) return <Login onLoginSuccess={setToken} />
+    if (!token) {
+      if (!showAuth) {
+        return (
+          <Landing
+            onGetStarted={() => { setAuthMode('register'); setShowAuth(true) }}
+            onSignIn={() => { setAuthMode('login'); setShowAuth(true) }}
+          />
+        )
+      }
+      return <Login onLoginSuccess={setToken} initialMode={authMode} onBack={() => setShowAuth(false)} />
+    }
     if (!user) return <section className="card"><h2>Loading profile...</h2>{error && <div className="error">{error}</div>}</section>
     switch (user.userType) {
       case 'JUDGE':
@@ -77,13 +91,18 @@ export default function App() {
       default:
         return <section className="card"><h2>Unknown role</h2></section>
     }
-  }, [token, user, error])
+  }, [token, user, error, showAuth, authMode])
 
   return (
     <div className="container">
       <header>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <h1 style={{ marginBottom: 0 }}>Court Case Management</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {!token && showAuth && (
+              <button className="secondary btn-inline" onClick={() => setShowAuth(false)}>← Back</button>
+            )}
+            <h1 style={{ marginBottom: 0 }}>Court Case Management</h1>
+          </div>
           <div style={{ minWidth: 180, display: 'flex', gap: 8 }}>
             <button onClick={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}>
               {theme === 'light' ? 'Switch to Dark' : 'Switch to Light'} Theme

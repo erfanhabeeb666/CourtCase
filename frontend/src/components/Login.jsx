@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { authenticate, me, registerClientPublic } from '../api/client'
 
-export default function Login({ onLoginSuccess }) {
-  const [mode, setMode] = useState('login') // 'login' | 'register'
+export default function Login({ onLoginSuccess, initialMode = 'login', onBack }) {
+  const [mode, setMode] = useState(initialMode) // 'login' | 'register'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
