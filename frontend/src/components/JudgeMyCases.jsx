@@ -7,7 +7,7 @@ export default function JudgeMyCases({ token }) {
   const [cases, setCases] = useState([])
   const [openCaseId, setOpenCaseId] = useState(null)
   const [detailsMap, setDetailsMap] = useState({}) // { [caseId]: { loading, error, hearings, documents } }
-  const [viewer, setViewer] = useState({ open: false, url: '', name: '' })
+  const [viewer, setViewer] = useState({ open: false, url: '', name: '', docId: null, caseId: null })
 
   const loadCases = async () => {
     setLoading(true)
@@ -46,11 +46,12 @@ export default function JudgeMyCases({ token }) {
     }
   }
 
-  const openPdfViewer = async (doc) => {
+  const openPdfViewer = async (doc, caseId) => {
     try {
+      if (viewer.url) URL.revokeObjectURL(viewer.url)
       const blob = await fetchDocumentBlob(token, doc.id)
       const url = URL.createObjectURL(blob)
-      setViewer({ open: true, url, name: doc.fileName || `document-${doc.id}.pdf` })
+      setViewer({ open: true, url, name: doc.fileName || `document-${doc.id}.pdf`, docId: doc.id, caseId })
     } catch (e) {
       setError(String(e.message || e))
     }
@@ -58,7 +59,7 @@ export default function JudgeMyCases({ token }) {
 
   const closePdfViewer = () => {
     if (viewer.url) URL.revokeObjectURL(viewer.url)
-    setViewer({ open: false, url: '', name: '' })
+    setViewer({ open: false, url: '', name: '', docId: null, caseId: null })
   }
 
   return (
@@ -112,24 +113,25 @@ export default function JudgeMyCases({ token }) {
                             {detailsMap[c.id].documents?.map((d) => (
                               <li key={d.id}>
                                 {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                                <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                                <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, c.id)}>View</button>
+                                {viewer.open && viewer.docId === d.id && viewer.caseId === c.id && (
+                                  <div className="card" style={{ marginTop: 8 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                                      <button onClick={closePdfViewer}>Close</button>
+                                    </div>
+                                    <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                                      <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                                    </div>
+                                  </div>
+                                )}
                               </li>
                             ))}
                           </ul>
                         </div>
                       </div>
 
-                      {viewer.open && (
-                        <div className="card" style={{ marginTop: 12 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ margin: 0 }}>{viewer.name}</h3>
-                            <button onClick={closePdfViewer}>Close</button>
-                          </div>
-                          <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
-                            <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
-                          </div>
-                        </div>
-                      )}
+                      {/* Inline viewer now renders beneath the selected document item */}
                     </>
                   )}
                 </div>

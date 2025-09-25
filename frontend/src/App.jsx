@@ -97,9 +97,6 @@ export default function App() {
           <button onClick={() => setToken('')}>Logout</button>
         </section>
       )}
-      <footer>
-        <small>Set VITE_API_BASE in .env to your backend base URL (e.g., http://localhost:8080)</small>
-      </footer>
     </div>
   )
 }

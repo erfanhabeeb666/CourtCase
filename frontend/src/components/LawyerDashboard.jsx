@@ -55,7 +55,7 @@ export default function LawyerDashboard({ token }) {
   const [searchHearings, setSearchHearings] = useState([])
   const [searchDocuments, setSearchDocuments] = useState([])
   const [searchErr, setSearchErr] = useState('')
-  const [viewer, setViewer] = useState({ open: false, url: '', name: '' })
+  const [viewer, setViewer] = useState({ open: false, url: '', name: '', docId: null, caseId: null })
 
   // Per-case document upload state
   const [uploadMap, setUploadMap] = useState({}) // { [caseId]: { file, note, uploading, error, ok } }
@@ -176,11 +176,12 @@ export default function LawyerDashboard({ token }) {
     }
   }
 
-  const openPdfViewer = async (doc) => {
+  const openPdfViewer = async (doc, caseId) => {
     try {
+      if (viewer.url) URL.revokeObjectURL(viewer.url)
       const blob = await fetchDocumentBlob(token, doc.id)
       const url = URL.createObjectURL(blob)
-      setViewer({ open: true, url, name: doc.fileName || `document-${doc.id}.pdf` })
+      setViewer({ open: true, url, name: doc.fileName || `document-${doc.id}.pdf`, docId: doc.id, caseId })
     } catch (e) {
       setError(String(e.message || e))
     }
@@ -204,7 +205,7 @@ export default function LawyerDashboard({ token }) {
 
   const closePdfViewer = () => {
     if (viewer.url) URL.revokeObjectURL(viewer.url)
-    setViewer({ open: false, url: '', name: '' })
+    setViewer({ open: false, url: '', name: '', docId: null, caseId: null })
   }
 
   const sections = [
@@ -242,8 +243,19 @@ export default function LawyerDashboard({ token }) {
                 {uploadDocs.map(d => (
                   <li key={d.id}>
                     {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                    <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                    <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, Number(caseId) || null)}>View</button>
                     <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                    {viewer.open && viewer.docId === d.id && (viewer.caseId === Number(caseId) || viewer.caseId == null) && (
+                      <div className="card" style={{ marginTop: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                          <button onClick={closePdfViewer}>Close</button>
+                        </div>
+                        <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                          <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
                 {uploadDocs.length === 0 && (
@@ -308,8 +320,19 @@ export default function LawyerDashboard({ token }) {
                               {(detailsMap[c.id].documents || []).filter(d => currentUser && d.uploaderId === currentUser.id).map((d) => (
                                 <li key={d.id}>
                                   {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, c.id)}>View</button>
                                   <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                                  {viewer.open && viewer.docId === d.id && viewer.caseId === c.id && (
+                                    <div className="card" style={{ marginTop: 8 }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                                        <button onClick={closePdfViewer}>Close</button>
+                                      </div>
+                                      <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                                        <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                                      </div>
+                                    </div>
+                                  )}
                                 </li>
                               ))}
                               {(!currentUser || (detailsMap[c.id].documents || []).filter(d => d.uploaderId === currentUser.id).length === 0) && (
@@ -325,8 +348,19 @@ export default function LawyerDashboard({ token }) {
                                   {currentUser && d.uploaderId === currentUser.id && (
                                     <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
                                   )}
-                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, c.id)}>View</button>
                                   <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                                  {viewer.open && viewer.docId === d.id && viewer.caseId === c.id && (
+                                    <div className="card" style={{ marginTop: 8 }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                                        <button onClick={closePdfViewer}>Close</button>
+                                      </div>
+                                      <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                                        <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                                      </div>
+                                    </div>
+                                  )}
                                 </li>
                               ))}
                               {(!detailsMap[c.id].documents || detailsMap[c.id].documents.length === 0) && (
@@ -421,8 +455,19 @@ export default function LawyerDashboard({ token }) {
                       {currentUser && d.uploaderId === currentUser.id && (
                         <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
                       )}
-                      <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                      <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, searchCase?.id || Number(searchId))}>View</button>
                       <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                      {viewer.open && viewer.docId === d.id && viewer.caseId === (searchCase?.id || Number(searchId)) && (
+                        <div className="card" style={{ marginTop: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                            <button onClick={closePdfViewer}>Close</button>
+                          </div>
+                          <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                            <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                          </div>
+                        </div>
+                      )}
                     </li>
                   ))}
                   {(!searchDocuments || searchDocuments.length === 0) && (
@@ -430,17 +475,7 @@ export default function LawyerDashboard({ token }) {
                   )}
                 </ul>
               </div>
-              {viewer.open && (
-                <div className="card" style={{ marginTop: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0 }}>{viewer.name}</h3>
-                    <button onClick={closePdfViewer}>Close</button>
-                  </div>
-                  <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
-                    <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
-                  </div>
-                </div>
-              )}
+              {/* Inline viewer now renders beneath the selected document item */}
             </div>
           )}
         </section>

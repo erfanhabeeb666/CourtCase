@@ -18,7 +18,7 @@ export default function ClientDashboard({ token }) {
   // Documents per case (client view)
   const [openCaseId, setOpenCaseId] = useState(null)
   const [docsMap, setDocsMap] = useState({}) // { [caseId]: { loading, error, documents: [] } }
-  const [viewer, setViewer] = useState({ open: false, url: '', name: '' })
+  const [viewer, setViewer] = useState({ open: false, url: '', name: '', docId: null, caseId: null })
 
   // Upload state per case
   const [uploadNotes, setUploadNotes] = useState({}) // { [caseId]: note }
@@ -92,11 +92,13 @@ export default function ClientDashboard({ token }) {
     }
   }
 
-  const openPdfViewer = async (doc) => {
+  const openPdfViewer = async (doc, caseId) => {
     try {
+      // Revoke existing url if switching docs
+      if (viewer.url) URL.revokeObjectURL(viewer.url)
       const blob = await fetchDocumentBlob(token, doc.id)
       const url = URL.createObjectURL(blob)
-      setViewer({ open: true, url, name: doc.fileName || `document-${doc.id}.pdf` })
+      setViewer({ open: true, url, name: doc.fileName || `document-${doc.id}.pdf`, docId: doc.id, caseId })
     } catch (e) {
       setListErr(String(e.message || e))
     }
@@ -104,7 +106,7 @@ export default function ClientDashboard({ token }) {
 
   const closePdfViewer = () => {
     if (viewer.url) URL.revokeObjectURL(viewer.url)
-    setViewer({ open: false, url: '', name: '' })
+    setViewer({ open: false, url: '', name: '', docId: null, caseId: null })
   }
 
   const download = async (doc) => {
@@ -191,8 +193,19 @@ export default function ClientDashboard({ token }) {
                             {(docsMap[c.id].documents || []).map(d => (
                               <li key={d.id}>
                                 {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                                <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                                <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, c.id)}>View</button>
                                 <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                                {viewer.open && viewer.docId === d.id && viewer.caseId === c.id && (
+                                  <div className="card" style={{ marginTop: 8 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                                      <button onClick={closePdfViewer}>Close</button>
+                                    </div>
+                                    <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                                      <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                                    </div>
+                                  </div>
+                                )}
                               </li>
                             ))}
                             {(!docsMap[c.id].documents || docsMap[c.id].documents.length === 0) && (
@@ -200,17 +213,7 @@ export default function ClientDashboard({ token }) {
                             )}
                           </ul>
 
-                          {viewer.open && (
-                            <div className="card" style={{ marginTop: 12 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ margin: 0 }}>{viewer.name}</h3>
-                                <button onClick={closePdfViewer}>Close</button>
-                              </div>
-                              <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
-                                <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
-                              </div>
-                            </div>
-                          )}
+                          {/* Inline viewer now renders under the selected document item */}
                         </>
                       )}
                     </div>
