@@ -1,25 +1,59 @@
 import React, { useEffect, useState } from 'react'
-import { uploadDocumentForRole, lawyerMyCases, lawyerGetCase, lawyerGetHearings, fetchDocumentBlob } from '../api/client'
+import { uploadDocumentForRole, lawyerMyCases, lawyerGetCase, lawyerGetHearings, lawyerGetDocuments, fetchDocumentBlob, downloadDocument, me } from '../api/client'
 import SidebarLayout from './SidebarLayout'
 
 export default function LawyerDashboard({ token }) {
+  const [currentUser, setCurrentUser] = useState(null)
   const [caseId, setCaseId] = useState('')
   const [file, setFile] = useState(null)
   const [note, setNote] = useState('')
   const [ok, setOk] = useState(false)
   const [error, setError] = useState('')
+  // Upload tab documents preview just below the form
+  const [uploadDocs, setUploadDocs] = useState([])
+  const [uploadDocsErr, setUploadDocsErr] = useState('')
+  const [uploadDocsLoading, setUploadDocsLoading] = useState(false)
+
+  // Load existing documents when a case ID is entered/changed in the upload tab
+  useEffect(() => {
+    const load = async () => {
+      if (!token || !caseId) { setUploadDocs([]); setUploadDocsErr(''); return }
+      setUploadDocsErr(''); setUploadDocsLoading(true)
+      try {
+        const docs = await lawyerGetDocuments(token, Number(caseId))
+        setUploadDocs(docs)
+      } catch (e) {
+        setUploadDocsErr(String(e.message || e))
+      } finally {
+        setUploadDocsLoading(false)
+      }
+    }
+    load()
+  }, [token, caseId])
+
+  // Load current user to filter "my uploads"
+  useEffect(() => {
+    let active = true
+    const loadMe = async () => {
+      if (!token) { setCurrentUser(null); return }
+      try { const u = await me(token); if (active) setCurrentUser(u) } catch { /* ignore */ }
+    }
+    loadMe()
+    return () => { active = false }
+  }, [token])
 
   // My Cases state
   const [myCases, setMyCases] = useState([])
   const [myCasesLoading, setMyCasesLoading] = useState(false)
   const [myCasesErr, setMyCasesErr] = useState('')
   const [openCaseId, setOpenCaseId] = useState(null)
-  const [detailsMap, setDetailsMap] = useState({}) // { [caseId]: { loading, error, hearings } }
+  const [detailsMap, setDetailsMap] = useState({}) // { [caseId]: { loading, error, hearings, documents } }
 
   // Search Case state
   const [searchId, setSearchId] = useState('')
   const [searchCase, setSearchCase] = useState(null)
   const [searchHearings, setSearchHearings] = useState([])
+  const [searchDocuments, setSearchDocuments] = useState([])
   const [searchErr, setSearchErr] = useState('')
   const [viewer, setViewer] = useState({ open: false, url: '', name: '' })
 
@@ -48,6 +82,13 @@ export default function LawyerDashboard({ token }) {
     try {
       await uploadDocumentForRole(token, 'LAWYER', { caseId: cid, file: state.file, note: state.note })
       setUploadField(cid, 'ok', true)
+      // refresh documents if this case panel is open (like judge view)
+      if (openCaseId === cid) {
+        try {
+          const documents = await lawyerGetDocuments(token, cid)
+          setDetailsMap(prev => ({ ...prev, [cid]: { ...(prev[cid] || {}), documents } }))
+        } catch {}
+      }
       setUploadField(cid, 'file', null)
       setUploadField(cid, 'note', '')
     } catch (e) {
@@ -64,7 +105,20 @@ export default function LawyerDashboard({ token }) {
     try {
       await uploadDocumentForRole(token, 'LAWYER', { caseId, file, note })
       setOk(true)
-      setCaseId(''); setFile(null); setNote('')
+      // Keep caseId as requested; only clear selected file and note
+      setFile(null); setNote('')
+      // After successful upload, load documents for this case and show below
+      if (caseId) {
+        setUploadDocsErr(''); setUploadDocsLoading(true)
+        try {
+          const docs = await lawyerGetDocuments(token, Number(caseId))
+          setUploadDocs(docs)
+        } catch (e) {
+          setUploadDocsErr(String(e.message || e))
+        } finally {
+          setUploadDocsLoading(false)
+        }
+      }
     } catch (e) {
       setError(e.message)
     }
@@ -91,25 +145,32 @@ export default function LawyerDashboard({ token }) {
     if (openCaseId === cid) { setOpenCaseId(null); return }
     setOpenCaseId(cid)
     if (!detailsMap[cid]) {
-      setDetailsMap(prev => ({ ...prev, [cid]: { loading: true, error: '', hearings: [] } }))
+      setDetailsMap(prev => ({ ...prev, [cid]: { loading: true, error: '', hearings: [], documents: [] } }))
       try {
-        const hearings = await lawyerGetHearings(token, cid)
-        setDetailsMap(prev => ({ ...prev, [cid]: { loading: false, error: '', hearings } }))
+        const [hearings, documents] = await Promise.all([
+          lawyerGetHearings(token, cid),
+          lawyerGetDocuments(token, cid)
+        ])
+        setDetailsMap(prev => ({ ...prev, [cid]: { loading: false, error: '', hearings, documents } }))
       } catch (e) {
-        setDetailsMap(prev => ({ ...prev, [cid]: { loading: false, error: String(e.message || e), hearings: [] } }))
+        setDetailsMap(prev => ({ ...prev, [cid]: { loading: false, error: String(e.message || e), hearings: [], documents: [] } }))
       }
     }
   }
 
   const doSearch = async (e) => {
     e?.preventDefault?.()
-    setSearchErr(''); setSearchCase(null); setSearchHearings([])
+    setSearchErr(''); setSearchCase(null); setSearchHearings([]); setSearchDocuments([])
     if (!searchId) { setSearchErr('Enter case ID'); return }
     try {
       const c = await lawyerGetCase(token, Number(searchId))
       setSearchCase(c)
-      const hs = await lawyerGetHearings(token, Number(searchId))
+      const [hs, ds] = await Promise.all([
+        lawyerGetHearings(token, Number(searchId)),
+        lawyerGetDocuments(token, Number(searchId))
+      ])
       setSearchHearings(hs)
+      setSearchDocuments(ds)
     } catch (e) {
       setSearchErr(String(e.message || e))
     }
@@ -120,6 +181,22 @@ export default function LawyerDashboard({ token }) {
       const blob = await fetchDocumentBlob(token, doc.id)
       const url = URL.createObjectURL(blob)
       setViewer({ open: true, url, name: doc.fileName || `document-${doc.id}.pdf` })
+    } catch (e) {
+      setError(String(e.message || e))
+    }
+  }
+
+  const download = async (doc) => {
+    try {
+      const { blob, filename } = await downloadDocument(token, doc.id)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
     } catch (e) {
       setError(String(e.message || e))
     }
@@ -145,7 +222,7 @@ export default function LawyerDashboard({ token }) {
             </label>
             <label>
               File
-              <input type="file" onChange={(e) => setFile(e.target.files?.[0])} required />
+              <input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0])} required />
             </label>
             <label>
               Note
@@ -155,6 +232,37 @@ export default function LawyerDashboard({ token }) {
           </form>
           {ok && <div className="success">Uploaded</div>}
           {error && <div className="error">{error}</div>}
+
+          <div style={{ borderTop: '1px solid var(--muted)', marginTop: 12, paddingTop: 12 }}>
+            <h4 style={{ marginTop: 0 }}>Documents for Case {caseId || '(enter ID and upload)'}</h4>
+            {uploadDocsErr && <div className="error">{uploadDocsErr}</div>}
+            {uploadDocsLoading && <div>Loading documents...</div>}
+            {!uploadDocsLoading && (
+              <ul>
+                {uploadDocs.map(d => (
+                  <li key={d.id}>
+                    {d.fileName} — {d.note || ''} — {d.uploadedAt}
+                    <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                    <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                  </li>
+                ))}
+                {uploadDocs.length === 0 && (
+                  <li>No uploaded files</li>
+                )}
+              </ul>
+            )}
+            {viewer.open && (
+              <div className="card" style={{ marginTop: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                  <button onClick={closePdfViewer}>Close</button>
+                </div>
+                <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                  <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                </div>
+              </div>
+            )}
+          </div>
         </section>
       )
     },
@@ -174,7 +282,7 @@ export default function LawyerDashboard({ token }) {
             <ul>
               {myCases.map(c => (
                 <li key={c.id} style={{ marginBottom: 12 }}>
-                  <div><strong>Case:</strong> {c.title} — <strong>Status:</strong> {c.status}</div>
+                  <div><strong>Case:</strong> {c.title} — <strong>ID:</strong> {c.id} — <strong>Status:</strong> {c.status}</div>
                   <div><strong>Next Hearing:</strong> {c.nextHearingDate || '-'}</div>
                   {(c.verdict || c.status === 'CLOSED') && (
                     <div><strong>Verdict:</strong> {c.verdict || '-'}{c.verdictDate ? ` — on ${c.verdictDate}` : ''}</div>
@@ -193,6 +301,50 @@ export default function LawyerDashboard({ token }) {
                               <li key={h.id}><strong>{h.hearingDate}</strong> — {h.judgeSummary || '-'}{h.status ? ` — ${h.status}` : ''}</li>
                             ))}
                           </ul>
+
+                          <div style={{ borderTop: '1px solid var(--muted)', marginTop: 12, paddingTop: 12 }}>
+                            <h4 style={{ marginTop: 0 }}>My Uploads</h4>
+                            <ul>
+                              {(detailsMap[c.id].documents || []).filter(d => currentUser && d.uploaderId === currentUser.id).map((d) => (
+                                <li key={d.id}>
+                                  {d.fileName} — {d.note || ''} — {d.uploadedAt}
+                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                                  <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                                </li>
+                              ))}
+                              {(!currentUser || (detailsMap[c.id].documents || []).filter(d => d.uploaderId === currentUser.id).length === 0) && (
+                                <li>No uploaded files</li>
+                              )}
+                            </ul>
+
+                            <h4 style={{ marginTop: 16 }}>All Documents</h4>
+                            <ul>
+                              {(detailsMap[c.id].documents || []).map((d) => (
+                                <li key={d.id}>
+                                  {d.fileName} — {d.note || ''} — {d.uploadedAt}
+                                  {currentUser && d.uploaderId === currentUser.id && (
+                                    <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
+                                  )}
+                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                                  <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                                </li>
+                              ))}
+                              {(!detailsMap[c.id].documents || detailsMap[c.id].documents.length === 0) && (
+                                <li>No uploaded files</li>
+                              )}
+                            </ul>
+                          </div>
+                          {viewer.open && (
+                            <div className="card" style={{ marginTop: 12 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                                <button onClick={closePdfViewer}>Close</button>
+                              </div>
+                              <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                                <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                              </div>
+                            </div>
+                          )}
 
                           <div style={{ borderTop: '1px solid var(--muted)', marginTop: 12, paddingTop: 12 }}>
                             <h4 style={{ marginTop: 0 }}>Upload Document to this Case</h4>
@@ -220,6 +372,8 @@ export default function LawyerDashboard({ token }) {
                             {uploadMap[c.id]?.ok && <div className="success">Uploaded</div>}
                             {uploadMap[c.id]?.error && <div className="error">{uploadMap[c.id]?.error}</div>}
                           </div>
+
+                          
                         </>
                       )}
                     </div>
@@ -250,7 +404,7 @@ export default function LawyerDashboard({ token }) {
           {searchErr && <div className="error">{searchErr}</div>}
           {searchCase && (
             <div className="card" style={{ marginTop: 8 }}>
-              <div><strong>Case:</strong> {searchCase.title} — <strong>Status:</strong> {searchCase.status}</div>
+              <div><strong>Case:</strong> {searchCase.title} — <strong>ID:</strong> {searchCase.id} — <strong>Status:</strong> {searchCase.status}</div>
               <div><strong>Next Hearing:</strong> {searchCase.nextHearingDate || '-'}</div>
               <h4 style={{ marginTop: 8 }}>Hearings</h4>
               <ul>
@@ -258,6 +412,35 @@ export default function LawyerDashboard({ token }) {
                   <li key={h.id}><strong>{h.hearingDate}</strong> — {h.judgeSummary || '-'}{h.status ? ` — ${h.status}` : ''}</li>
                 ))}
               </ul>
+              <div style={{ borderTop: '1px solid var(--muted)', marginTop: 12, paddingTop: 12 }}>
+                <h4 style={{ marginTop: 0 }}>Documents</h4>
+                <ul>
+                  {(searchDocuments || []).map(d => (
+                    <li key={d.id}>
+                      {d.fileName} — {d.note || ''} — {d.uploadedAt}
+                      {currentUser && d.uploaderId === currentUser.id && (
+                        <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
+                      )}
+                      <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d)}>View</button>
+                      <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                    </li>
+                  ))}
+                  {(!searchDocuments || searchDocuments.length === 0) && (
+                    <li>No uploaded files</li>
+                  )}
+                </ul>
+              </div>
+              {viewer.open && (
+                <div className="card" style={{ marginTop: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0 }}>{viewer.name}</h3>
+                    <button onClick={closePdfViewer}>Close</button>
+                  </div>
+                  <div style={{ height: 600, marginTop: 8, border: '1px solid var(--muted)' }}>
+                    <iframe title="PDF Viewer" src={viewer.url} style={{ width: '100%', height: '100%', border: 'none' }} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>

@@ -31,6 +31,14 @@ export async function lawyerGetHearings(token, caseId) {
   return res.json() // HearingDto[]
 }
 
+export async function lawyerGetDocuments(token, caseId) {
+  const res = await fetch(`${BASE_URL}/lawyer/cases/${caseId}/documents`, {
+    headers: { ...authHeaders(token) }
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json() // DocumentDto[]
+}
+
 export async function authenticate(email, password) {
   const res = await fetch(`${BASE_URL}/auth/authenticate`, {
     method: 'POST',
@@ -235,6 +243,27 @@ export async function adminListUsers(token, role) {
   return res.json() // UserSummaryDto[]
 }
 
+export async function clientUploadDocument(token, { caseId, files, note, file }) {
+  const form = new FormData()
+  form.append('caseId', caseId)
+  if (files && files.length) {
+    for (const f of files) form.append('files', f)
+  } else if (file) {
+    form.append('file', file)
+  } else {
+    throw new Error('No file(s) provided')
+  }
+  if (note) form.append('note', note)
+
+  const res = await fetch(`${BASE_URL}/client/cases/upload-document`, {
+    method: 'POST',
+    headers: { ...authHeaders(token) },
+    body: form
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return true
+}
+
 export async function adminUpdateUserStatus(token, userId, status) {
   const res = await fetch(`${BASE_URL}/admin/users/${userId}/status?status=${encodeURIComponent(status)}`, {
     method: 'PATCH',
@@ -261,6 +290,20 @@ export async function clientMyCases(token) {
   })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
+}
+
+// Client: list documents for a case
+export async function clientGetDocuments(token, caseId) {
+  const url = `${BASE_URL}/client/cases/${Number(caseId)}/documents`
+  const res = await fetch(url, {
+    headers: { ...authHeaders(token) }
+  })
+  if (!res.ok) {
+    let body = ''
+    try { body = await res.text() } catch {}
+    throw new Error(`GET ${url} failed ${res.status} ${res.statusText}${body ? ` — ${body}` : ''}`)
+  }
+  return res.json() // DocumentDto[]
 }
 
 export async function clientListLawyers(token) {

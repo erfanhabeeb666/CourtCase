@@ -1,13 +1,16 @@
 package com.mini2550.CourtCaseManagementSystem.Services;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.HearingDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.DocumentDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.UploadDocumentRequest;
 import com.mini2550.CourtCaseManagementSystem.Models.Case;
 import com.mini2550.CourtCaseManagementSystem.Models.Hearing;
+import com.mini2550.CourtCaseManagementSystem.Models.Document;
 import com.mini2550.CourtCaseManagementSystem.Models.User;
 import com.mini2550.CourtCaseManagementSystem.Repositories.CaseRepository;
 import com.mini2550.CourtCaseManagementSystem.Repositories.HearingRepository;
 import com.mini2550.CourtCaseManagementSystem.Repositories.UserRepository;
+import com.mini2550.CourtCaseManagementSystem.Repositories.DocumentRepository;
 import com.mini2550.CourtCaseManagementSystem.Security.JwtService;
 import com.mini2550.CourtCaseManagementSystem.Security.JwtUtils;
 import com.mini2550.CourtCaseManagementSystem.Utils.FileUploadUtil;
@@ -26,12 +29,14 @@ public class LawyerService {
     private final HearingRepository hearingRepository;
     private final JwtUtils jwtUtils;
     private final JwtService jwtService;
+    private final DocumentRepository documentRepository;
 
     public LawyerService(FileUploadUtil fileUploadUtil,
                          HttpServletRequest servletRequest,
                          UserRepository userRepository,
                          CaseRepository caseRepository,
                          HearingRepository hearingRepository,
+                         DocumentRepository documentRepository,
                          JwtUtils jwtUtils,
                          JwtService jwtService) {
         this.fileUploadUtil = fileUploadUtil;
@@ -41,6 +46,7 @@ public class LawyerService {
         this.hearingRepository = hearingRepository;
         this.jwtUtils = jwtUtils;
         this.jwtService = jwtService;
+        this.documentRepository = documentRepository;
     }
 
     public void uploadDocument(UploadDocumentRequest request) {
@@ -68,6 +74,14 @@ public class LawyerService {
         if (!isLawyerOnCase(lawyer, c)) throw new RuntimeException("Not authorized for this case");
         return hearingRepository.findByCourtCaseOrderByHearingDateAsc(c)
                 .stream().map(this::toHearingDto).collect(Collectors.toList());
+    }
+
+    public List<DocumentDto> getDocuments(Long caseId) {
+        User lawyer = getCurrentUser();
+        Case c = caseRepository.findById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
+        if (!isLawyerOnCase(lawyer, c)) throw new RuntimeException("Not authorized for this case");
+        return documentRepository.findByCourtCaseOrderByUploadedAtDesc(c)
+                .stream().map(this::toDocumentDto).collect(Collectors.toList());
     }
 
     private boolean isLawyerOnCase(User lawyer, Case c) {
@@ -109,6 +123,17 @@ public class LawyerService {
         dto.setJudgeSummary(h.getJudgeSummary());
         dto.setCreatedAt(h.getCreatedAt());
         dto.setStatus(h.getStatus());
+        return dto;
+    }
+
+    private DocumentDto toDocumentDto(Document d) {
+        DocumentDto dto = new DocumentDto();
+        dto.setId(d.getId());
+        dto.setFileName(d.getFileName());
+        dto.setFilePath(d.getFilePath());
+        dto.setUploaderId(d.getUploaderId());
+        dto.setNote(d.getNote());
+        dto.setUploadedAt(d.getUploadedAt());
         return dto;
     }
 }

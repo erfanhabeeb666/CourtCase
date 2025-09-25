@@ -1,6 +1,7 @@
 package com.mini2550.CourtCaseManagementSystem.Controllers;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.HearingDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.DocumentDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.UploadDocumentRequest;
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto;
 import com.mini2550.CourtCaseManagementSystem.Models.User;
@@ -41,5 +42,10 @@ public class LawyerController {
     @GetMapping("/cases/{caseId}/hearings")
     public ResponseEntity<List<HearingDto>> getHearings(@PathVariable Long caseId) {
         return ResponseEntity.ok(lawyerService.getHearings(caseId));
+    }
+
+    @GetMapping("/cases/{caseId}/documents")
+    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable Long caseId) {
+        return ResponseEntity.ok(lawyerService.getDocuments(caseId));
     }
 }

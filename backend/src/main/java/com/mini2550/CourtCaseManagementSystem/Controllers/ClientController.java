@@ -2,7 +2,9 @@ package com.mini2550.CourtCaseManagementSystem.Controllers;
 
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.CaseFileRequestDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.DocumentDto;
 import com.mini2550.CourtCaseManagementSystem.Dtos.UserSummaryDto;
+import com.mini2550.CourtCaseManagementSystem.Dtos.UploadDocumentRequest;
 import com.mini2550.CourtCaseManagementSystem.Services.ClientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,5 +38,16 @@ public class ClientController {
         return ResponseEntity.ok(clientService.listLawyers());
     }
 
+
+    @PostMapping("/cases/upload-document")
+    public ResponseEntity<Void> uploadDocument(@ModelAttribute UploadDocumentRequest request) {
+        clientService.uploadDocument(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/cases/{caseId}/documents")
+    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable Long caseId) {
+        return ResponseEntity.ok(clientService.getDocuments(caseId));
+    }
 
 }

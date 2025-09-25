@@ -30,12 +30,25 @@ public class FileUploadUtil {
             if (courtCase.getJudge() == null || !courtCase.getJudge().getId().equals(user.getId())) {
                 throw new RuntimeException("Not authorized to upload");
             }
+        } else if (user.getUserType() == UserType.CLIENT) {
+            if (courtCase.getClient() == null || !courtCase.getClient().getId().equals(user.getId())) {
+                throw new RuntimeException("Not authorized to upload");
+            }
         } else {
             throw new RuntimeException("Not authorized to upload");
         }
 
-
-        // Save file logic here (e.g., store in filesystem or DB)
-        documentService.saveDocument(courtCase, request.getFile(), request.getNote(),user);
+        // Save file(s)
+        if (request.getFiles() != null && request.getFiles().length > 0) {
+            for (var f : request.getFiles()) {
+                if (f != null && !f.isEmpty()) {
+                    documentService.saveDocument(courtCase, f, request.getNote(), user);
+                }
+            }
+        } else if (request.getFile() != null && !request.getFile().isEmpty()) {
+            documentService.saveDocument(courtCase, request.getFile(), request.getNote(), user);
+        } else {
+            throw new RuntimeException("No file provided");
+        }
     }
 }

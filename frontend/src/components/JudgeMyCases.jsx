@@ -77,7 +77,7 @@ export default function JudgeMyCases({ token }) {
           {cases.map((c) => (
             <li key={c.id} style={{ marginBottom: 12 }}>
               <div>
-                <strong>Case:</strong> {c.title} — <strong>Status:</strong> {c.status}
+                <strong>Case:</strong> {c.title} — <strong>ID:</strong> {c.id} — <strong>Status:</strong> {c.status}
               </div>
               <div>
                 <strong>Next Hearing:</strong> {c.nextHearingDate || '-'} {c.verdict ? `— Verdict: ${c.verdict}` : ''}

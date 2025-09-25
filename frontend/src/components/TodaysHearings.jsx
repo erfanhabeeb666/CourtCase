@@ -195,7 +195,7 @@ export default function TodaysHearings({ token }) {
             return (
               <li key={it.hearing.id} style={{ marginBottom: 12 }}>
                 <div>
-                  <strong>Case:</strong> {it.courtCase.title} — Status: {it.courtCase.status}
+                  <strong>Case:</strong> {it.courtCase.title} — <strong>ID:</strong> {it.courtCase.id} — Status: {it.courtCase.status}
                 </div>
                 <div>
                   <strong>Hearing ID:</strong> {it.hearing.id} — <strong>Date:</strong>{' '}

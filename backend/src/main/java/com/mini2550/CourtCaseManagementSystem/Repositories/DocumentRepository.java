@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
-
     List<Document> findByCourtCase(Case courtCase);
+    List<Document> findByCourtCaseOrderByUploadedAtDesc(Case courtCase);
 }
