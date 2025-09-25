@@ -108,6 +108,7 @@ public class AuthenticationService {
             client.setPassword(passwordEncoder.encode(user.getPassword()));
             client.setUserType(UserType.CLIENT);
             client.setStatus(Status.ACTIVE);
+            client.setLegalIdentity(user.getLegalIdentity());
             clientRepository.save(client);
         } catch (DataIntegrityViolationException e) {
             throw new RuntimeException("Email already exists: " + user.getEmail());

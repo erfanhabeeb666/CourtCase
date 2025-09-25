@@ -17,7 +17,7 @@ export default function Login({ onLoginSuccess }) {
     try {
       if (mode === 'register') {
         // Register client publicly
-        await registerClientPublic({ name, email, password, legalIdentity: legalIdentity || undefined })
+        await registerClientPublic({ name, email, password, legalIdentity })
         // Auto-login after successful registration
         const { token } = await authenticate(email, password)
         if (!token) throw new Error('No token returned')
@@ -56,8 +56,8 @@ export default function Login({ onLoginSuccess }) {
         </label>
         {mode === 'register' && (
           <label>
-            Legal Identity (optional)
-            <input value={legalIdentity} onChange={(e) => setLegalIdentity(e.target.value)} placeholder="e.g., Government ID" />
+            Legal Identity
+            <input value={legalIdentity} onChange={(e) => setLegalIdentity(e.target.value)} placeholder="e.g., Government ID" required />
           </label>
         )}
         <button type="submit" disabled={loading}>
