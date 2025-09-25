@@ -145,9 +145,9 @@ public class AdminService {
         return dto;
     }
 
-    // Cases listing for admin
+    // Cases listing for admin (restricted to NEW by requirement)
     public List<CaseDto> listCases() {
-        List<Case> cases = caseRepository.findAll();
+        List<Case> cases = caseRepository.findByStatus(CaseStatus.NEW);
         return cases.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 

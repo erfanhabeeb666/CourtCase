@@ -6,6 +6,31 @@ export function authHeaders(token) {
   return headers
 }
 
+// Lawyer APIs
+export async function lawyerMyCases(token) {
+  const res = await fetch(`${BASE_URL}/lawyer/my-cases`, {
+    headers: { ...authHeaders(token) }
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json() // CaseDto[]
+}
+
+export async function lawyerGetCase(token, caseId) {
+  const res = await fetch(`${BASE_URL}/lawyer/cases/${caseId}`, {
+    headers: { ...authHeaders(token) }
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json() // CaseDto
+}
+
+export async function lawyerGetHearings(token, caseId) {
+  const res = await fetch(`${BASE_URL}/lawyer/cases/${caseId}/hearings`, {
+    headers: { ...authHeaders(token) }
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json() // HearingDto[]
+}
+
 export async function authenticate(email, password) {
   const res = await fetch(`${BASE_URL}/auth/authenticate`, {
     method: 'POST',
