@@ -194,8 +194,14 @@ export default function AdminDashboard({ token }) {
           <h2>User Management</h2>
           <div className="form-grid">
             <label>
-              Role Filter (optional)
-              <input placeholder="ADMIN | JUDGE | LAWYER | CLIENT" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} />
+              Role Filter
+              <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+                <option value="">All</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="JUDGE">JUDGE</option>
+                <option value="LAWYER">LAWYER</option>
+                <option value="CLIENT">CLIENT</option>
+              </select>
             </label>
             <button onClick={loadUsers} disabled={!token}>Load Users</button>
           </div>

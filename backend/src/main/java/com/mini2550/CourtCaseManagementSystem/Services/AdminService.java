@@ -80,13 +80,19 @@ public class AdminService {
 
 
     public void addJudge(UserDto user) {
-        Judge judge = new Judge();
-        judge.setName(user.getName());
-        judge.setEmail(user.getEmail());
-        judge.setPassword(passwordEncoder.encode(user.getPassword()));
-        judge.setUserType(UserType.JUDGE);
-        judge.setStatus(Status.ACTIVE);
-        judgeRepository.save(judge);
+        try {
+            Judge judge = new Judge();
+            judge.setName(user.getName());
+            judge.setEmail(user.getEmail());
+            judge.setPassword(passwordEncoder.encode(user.getPassword()));
+            judge.setUserType(UserType.JUDGE);
+            judge.setStatus(Status.ACTIVE);
+            judgeRepository.save(judge);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new RuntimeException("Email already exists: " + user.getEmail());
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred while creating judge.", e);
+        }
     }
 
     @Transactional

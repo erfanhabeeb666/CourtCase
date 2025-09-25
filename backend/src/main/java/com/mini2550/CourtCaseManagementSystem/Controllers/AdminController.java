@@ -25,8 +25,16 @@ public class AdminController {
 
     @PostMapping("/add-judge")
     public ResponseEntity<String> addJudge(@RequestBody UserDto user){
-        adminService.addJudge(user);
-        return ResponseEntity.ok("judge created succesfully");
+        try {
+            adminService.addJudge(user);
+            return ResponseEntity.ok("judge created succesfully");
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "Judge creation failed";
+            if (msg.toLowerCase().contains("email already exists")) {
+                return ResponseEntity.status(409).body(msg);
+            }
+            return ResponseEntity.badRequest().body(msg);
+        }
     }
     @PutMapping("/cases/{caseId}/assign")
     public CaseDto assignCase(@PathVariable Long caseId, @RequestBody AssignCaseRequest request) {

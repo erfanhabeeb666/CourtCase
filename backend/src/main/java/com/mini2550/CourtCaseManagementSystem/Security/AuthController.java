@@ -74,13 +74,29 @@ public class AuthController {
     }
     @PostMapping("/register-client")
     public ResponseEntity<String> registerClient(@RequestBody UserDto client){
-        authenticationService.registerClient(client);
-        return ResponseEntity.ok("client registered successfully");
+        try {
+            authenticationService.registerClient(client);
+            return ResponseEntity.ok("client registered successfully");
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "Registration failed";
+            if (msg.toLowerCase().contains("email already exists")) {
+                return ResponseEntity.status(409).body(msg);
+            }
+            return ResponseEntity.badRequest().body(msg);
+        }
     }
     @PostMapping("/register-lawyer")
     public ResponseEntity<String> registerLawyer(@RequestBody UserDto client){
-        authenticationService.registerLawyer(client);
-        return ResponseEntity.ok("client registered successfully");
+        try {
+            authenticationService.registerLawyer(client);
+            return ResponseEntity.ok("client registered successfully");
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "Registration failed";
+            if (msg.toLowerCase().contains("email already exists")) {
+                return ResponseEntity.status(409).body(msg);
+            }
+            return ResponseEntity.badRequest().body(msg);
+        }
     }
 
 }
