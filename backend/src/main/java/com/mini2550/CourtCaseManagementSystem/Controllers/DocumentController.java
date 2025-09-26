@@ -40,6 +40,30 @@ public class DocumentController {
         this.request = request;
     }
 
+    @DeleteMapping("/{documentId}")
+    public ResponseEntity<Void> delete(@PathVariable Long documentId) {
+        Document doc = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+        Case courtCase = caseRepository.findById(doc.getCourtCase().getId())
+                .orElseThrow(() -> new RuntimeException("Case not found"));
+
+        // Only the original uploader can delete the document
+        User current = getCurrentUser();
+        if (!current.getId().equals(doc.getUploaderId())) {
+            throw new RuntimeException("Not authorized to delete this document");
+        }
+
+        // Best-effort delete on disk
+        Path path = Path.of(doc.getFilePath());
+        try {
+            Files.deleteIfExists(path);
+        } catch (Exception ignored) { /* ignore file deletion error, still remove DB record */ }
+
+        // Remove metadata
+        documentRepository.delete(doc);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{documentId}/download")
     public ResponseEntity<Resource> download(@PathVariable Long documentId) {
         Document doc = documentRepository.findById(documentId).orElseThrow(() -> new RuntimeException("Document not found"));

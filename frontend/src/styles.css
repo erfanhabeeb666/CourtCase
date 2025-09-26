@@ -5,7 +5,7 @@ html{scroll-behavior:smooth}
 header{margin-bottom:16px}h1{font-size:24px;margin:0 0 8px}
 .card{background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px;border:1px solid #1f2937}
 input,button{width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:var(--text)}
-button{background:#2563eb;border-color:#1d4ed8;cursor:pointer}button:disabled{opacity:.6;cursor:not-allowed}
+button{background:#0e317b;border-color:#456cd6;cursor:pointer}button:disabled{opacity:.6;cursor:not-allowed}
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
 small{color:var(--muted)}
 .grid-2{display:grid;grid-template-columns:1fr;gap:16px}
@@ -64,11 +64,13 @@ select {
 
 /* Buttons */
 button{font-weight:600;transition:background-color .15s ease, transform .06s ease, box-shadow .15s ease}
-button:hover:not(:disabled){background:#1e40af}
+button:hover:not(:disabled){background:#425eb8}
 button:active:not(:disabled){transform:translateY(1px)}
 button:focus-visible{box-shadow:0 0 0 3px rgba(37,99,235,.35), 0 6px 18px rgba(0,0,0,.25)}
 .secondary{background:transparent !important;color:var(--text);border-color:#334155}
 .secondary:hover{background:#0b1220}
+.danger{background:var(--danger);border-color:#b91c1c;color:#fff}
+.danger:hover{background:#dc2626}
 
 /* Inline button and back row (for Login card) */
 .btn-inline{width:auto; display:inline-block; padding:8px 10px}
@@ -139,7 +141,7 @@ ul li strong{color:#f8fafc}
 [data-theme="light"] body{background:var(--bg);color:var(--text)}
 [data-theme="light"] header,[data-theme="light"] footer{border-color:#e5e7eb}
 [data-theme="light"] input,[data-theme="light"] button{background:#ffffff;color:var(--text);border-color:#d1d5db}
-[data-theme="light"] button{background:#2563eb;color:#ffffff;border-color:#1d4ed8}
+[data-theme="light"] button{background:#93c5fd;color:#420063;border-color:#7fb3fb}
 [data-theme="light"] .result{background:#f3f4f6;border-color:#e5e7eb;color:#111827}
 [data-theme="light"] ul li{background:#ffffff;border-color:#e5e7eb}
 [data-theme="light"] .success,[data-theme="light"] .error{background:#f9fafb;border-color:#e5e7eb}
@@ -160,7 +162,7 @@ ul li strong{color:#f8fafc}
 [data-theme="light"] ul li strong{color:#111827}
 
 /* Light theme button hover state */
-[data-theme="light"] button:hover:not(:disabled){background:#1e40af}
+[data-theme="light"] button:hover:not(:disabled){background:#7fb3fb}
 
 /* Light theme scrollbar */
 [data-theme="light"] *::-webkit-scrollbar-track{background:#f1f5f9}
@@ -170,6 +172,8 @@ ul li strong{color:#f8fafc}
 
 [data-theme="light"] .secondary{background:transparent !important;color:var(--text);border-color:#d1d5db}
 [data-theme="light"] .secondary:hover{background:#f8fafc}
+[data-theme="light"] .danger{background:#ef4444;border-color:#b91c1c;color:#fff}
+[data-theme="light"] .danger:hover{background:#dc2626}
 
 [data-theme="light"] select {
   background: #ffffff;
@@ -180,4 +184,34 @@ ul li strong{color:#f8fafc}
 [data-theme="light"] select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}
+
+.topnav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 12px;
+  background:#93c5fd; /* light blue */
+  color:#0b1220;
+  border:1px solid rgba(2, 6, 23, 0.15);
+  border-radius:10px;
+}
+.topnav__left{display:flex; align-items:center; gap:10px}
+.topnav__right{display:flex; align-items:center; gap:8px; min-width:220px}
+.brand{font-weight:800; letter-spacing:.3px; font-size:20px}
+
+/* Make buttons inside topnav not stretch full-width */
+.topnav button{width:auto}
+
+/* Light theme retains same topbar palette for consistency */
+[data-theme="light"] .topnav{background:#93c5fd; color:#0b1220; border-color:rgba(2,6,23,0.15)}
+[data-theme="light"] .topnav .secondary{border-color:rgba(2, 6, 23, 0.2); background:rgba(255,255,255,0.35); color:#0b1220}
+[data-theme="light"] .topnav .secondary:hover{background:rgba(255,255,255,0.45)}
+
+/* Light theme: make landing tiles visible */
+[data-theme="light"] .landing .feature,
+[data-theme="light"] .landing .role-card{
+  background:#ffffff;
+  border-color:#e5e7eb;
 }

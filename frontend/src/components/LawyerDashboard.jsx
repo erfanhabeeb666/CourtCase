@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { uploadDocumentForRole, lawyerMyCases, lawyerGetCase, lawyerGetHearings, lawyerGetDocuments, fetchDocumentBlob, downloadDocument, me } from '../api/client'
+import { uploadDocumentForRole, lawyerMyCases, lawyerGetCase, lawyerGetHearings, lawyerGetDocuments, fetchDocumentBlob, downloadDocument, me, deleteDocument } from '../api/client'
 import SidebarLayout from './SidebarLayout'
 
 export default function LawyerDashboard({ token }) {
@@ -41,6 +41,28 @@ export default function LawyerDashboard({ token }) {
     loadMe()
     return () => { active = false }
   }, [token])
+
+  const removeDocFromCase = (cid, docId) => {
+    setDetailsMap(prev => ({
+      ...prev,
+      [cid]: {
+        ...(prev[cid] || {}),
+        documents: (prev[cid]?.documents || []).filter(d => d.id !== docId)
+      }
+    }))
+  }
+
+  const onDeleteDoc = async (doc, cid) => {
+    try {
+      if (!window.confirm('Delete this document?')) return
+      await deleteDocument(token, doc.id)
+      removeDocFromCase(cid, doc.id)
+      // Also remove from upload tab list if visible
+      setUploadDocs(prev => (prev || []).filter(d => d.id !== doc.id))
+    } catch (e) {
+      setError(String(e.message || e))
+    }
+  }
 
   // My Cases state
   const [myCases, setMyCases] = useState([])
@@ -242,9 +264,16 @@ export default function LawyerDashboard({ token }) {
               <ul>
                 {uploadDocs.map(d => (
                   <li key={d.id}>
-                    {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                    <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, Number(caseId) || null)}>View</button>
-                    <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>{d.fileName} — {d.note || ''} — {d.uploadedAt}</span>
+                      <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 6 }}>
+                        <button className="btn-inline" onClick={() => openPdfViewer(d, Number(caseId) || null)}>View</button>
+                        <button className="btn-inline" onClick={() => download(d)}>Download</button>
+                        {currentUser && d.uploaderId === currentUser.id && (
+                          <button className="btn-inline danger" onClick={() => onDeleteDoc(d, Number(caseId) || null)}>Delete</button>
+                        )}
+                      </span>
+                    </div>
                     {viewer.open && viewer.docId === d.id && (viewer.caseId === Number(caseId) || viewer.caseId == null) && (
                       <div className="card" style={{ marginTop: 8 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -315,13 +344,19 @@ export default function LawyerDashboard({ token }) {
                           </ul>
 
                           <div style={{ borderTop: '1px solid var(--muted)', marginTop: 12, paddingTop: 12 }}>
-                            <h4 style={{ marginTop: 0 }}>My Uploads</h4>
-                            <ul>
+                            <section className="card">
+                              <h4 style={{ marginTop: 0 }}>My Uploads</h4>
+                              <ul>
                               {(detailsMap[c.id].documents || []).filter(d => currentUser && d.uploaderId === currentUser.id).map((d) => (
                                 <li key={d.id}>
-                                  {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, c.id)}>View</button>
-                                  <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span>{d.fileName} — {d.note || ''} — {d.uploadedAt}</span>
+                                    <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 6 }}>
+                                      <button className="btn-inline" onClick={() => openPdfViewer(d, c.id)}>View</button>
+                                      <button className="btn-inline" onClick={() => download(d)}>Download</button>
+                                      <button className="btn-inline danger" onClick={() => onDeleteDoc(d, c.id)}>Delete</button>
+                                    </span>
+                                  </div>
                                   {viewer.open && viewer.docId === d.id && viewer.caseId === c.id && (
                                     <div className="card" style={{ marginTop: 8 }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -338,18 +373,26 @@ export default function LawyerDashboard({ token }) {
                               {(!currentUser || (detailsMap[c.id].documents || []).filter(d => d.uploaderId === currentUser.id).length === 0) && (
                                 <li>No uploaded files</li>
                               )}
-                            </ul>
+                              </ul>
+                            </section>
 
-                            <h4 style={{ marginTop: 16 }}>All Documents</h4>
-                            <ul>
+                            <section className="card" style={{ marginTop: 12 }}>
+                              <h4 style={{ marginTop: 0 }}>All Documents</h4>
+                              <ul>
                               {(detailsMap[c.id].documents || []).map((d) => (
                                 <li key={d.id}>
-                                  {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                                  {currentUser && d.uploaderId === currentUser.id && (
-                                    <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
-                                  )}
-                                  <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, c.id)}>View</button>
-                                  <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span>
+                                      {d.fileName} — {d.note || ''} — {d.uploadedAt}
+                                      {currentUser && d.uploaderId === currentUser.id && (
+                                        <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
+                                      )}
+                                    </span>
+                                    <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 6 }}>
+                                      <button className="btn-inline" onClick={() => openPdfViewer(d, c.id)}>View</button>
+                                      <button className="btn-inline" onClick={() => download(d)}>Download</button>
+                                    </span>
+                                  </div>
                                   {viewer.open && viewer.docId === d.id && viewer.caseId === c.id && (
                                     <div className="card" style={{ marginTop: 8 }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -366,7 +409,8 @@ export default function LawyerDashboard({ token }) {
                               {(!detailsMap[c.id].documents || detailsMap[c.id].documents.length === 0) && (
                                 <li>No uploaded files</li>
                               )}
-                            </ul>
+                              </ul>
+                            </section>
                           </div>
                           {viewer.open && (
                             <div className="card" style={{ marginTop: 12 }}>
@@ -451,12 +495,18 @@ export default function LawyerDashboard({ token }) {
                 <ul>
                   {(searchDocuments || []).map(d => (
                     <li key={d.id}>
-                      {d.fileName} — {d.note || ''} — {d.uploadedAt}
-                      {currentUser && d.uploaderId === currentUser.id && (
-                        <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
-                      )}
-                      <button style={{ marginLeft: 8 }} onClick={() => openPdfViewer(d, searchCase?.id || Number(searchId))}>View</button>
-                      <button style={{ marginLeft: 8 }} onClick={() => download(d)}>Download</button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>
+                          {d.fileName} — {d.note || ''} — {d.uploadedAt}
+                          {currentUser && d.uploaderId === currentUser.id && (
+                            <span style={{ marginLeft: 8, color: 'var(--muted-foreground)' }}>(You uploaded)</span>
+                          )}
+                        </span>
+                        <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 6 }}>
+                          <button className="btn-inline" onClick={() => openPdfViewer(d, searchCase?.id || Number(searchId))}>View</button>
+                          <button className="btn-inline" onClick={() => download(d)}>Download</button>
+                        </span>
+                      </div>
                       {viewer.open && viewer.docId === d.id && viewer.caseId === (searchCase?.id || Number(searchId)) && (
                         <div className="card" style={{ marginTop: 8 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

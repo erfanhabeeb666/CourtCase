@@ -32,7 +32,16 @@ export default function SidebarLayout({ sections = [], defaultKey, persistKey, s
 
   return (
     <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-      <aside className="card" style={{ width: sidebarWidth, padding: 0 }}>
+      <aside
+        className="card"
+        style={{
+          width: sidebarWidth,
+          padding: 0,
+          position: 'sticky',
+          top: 16,
+          alignSelf: 'flex-start'
+        }}
+      >
         <div style={{ borderBottom: '1px solid var(--muted)', padding: '12px 14px' }}>
           <strong>Actions</strong>
         </div>
@@ -83,3 +92,4 @@ export default function SidebarLayout({ sections = [], defaultKey, persistKey, s
     </div>
   )
 }
+

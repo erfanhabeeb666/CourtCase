@@ -139,6 +139,16 @@ export async function fetchDocumentBlob(token, documentId) {
   return await res.blob()
 }
 
+// Delete a document by ID
+export async function deleteDocument(token, documentId) {
+  const res = await fetch(`${BASE_URL}/documents/${documentId}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders(token) }
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return true
+}
+
 export async function uploadDocument(token, { caseId, file, note }) {
   const form = new FormData()
   form.append('caseId', caseId)

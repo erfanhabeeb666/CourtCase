@@ -8,6 +8,7 @@ import LawyerDashboard from './components/LawyerDashboard.jsx'
 import ClientDashboard from './components/ClientDashboard.jsx'
 import SidebarLayout from './components/SidebarLayout.jsx'
 import Landing from './components/Landing.jsx'
+import TopNav from './components/TopNav.jsx'
 
 function JudgeDashboard({ token }) {
   const sections = [
@@ -96,26 +97,22 @@ export default function App() {
   return (
     <div className="container">
       <header>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {!token && showAuth && (
-              <button className="secondary btn-inline" onClick={() => setShowAuth(false)}>← Back</button>
-            )}
-            <h1 style={{ marginBottom: 0 }}>Court Case Management</h1>
-          </div>
-          <div style={{ minWidth: 180, display: 'flex', gap: 8 }}>
-            <button onClick={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}>
-              {theme === 'light' ? 'Switch to Dark' : 'Switch to Light'} Theme
-            </button>
-          </div>
-        </div>
+        <TopNav
+          isAuthed={!!token}
+          onLogout={() => setToken('')}
+          theme={theme}
+          onToggleTheme={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}
+          onBack={() => {
+            if (!token && showAuth) {
+              setShowAuth(false)
+              return
+            }
+            if (window && window.history) window.history.back()
+          }}
+        />
       </header>
       {content}
-      {token && (
-        <section className="card">
-          <button onClick={() => setToken('')}>Logout</button>
-        </section>
-      )}
     </div>
   )
 }
+
