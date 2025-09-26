@@ -29,6 +29,9 @@ export default function AdminDashboard({ token }) {
   const [usersErr, setUsersErr] = useState('')
   const [statusBusyId, setStatusBusyId] = useState(null)
 
+  // Today string for date inputs (YYYY-MM-DD)
+  const todayStr = new Date().toISOString().slice(0, 10)
+
   // Register client/lawyer
   const [cName, setCName] = useState('')
   const [cEmail, setCEmail] = useState('')
@@ -102,8 +105,8 @@ export default function AdminDashboard({ token }) {
         judgeId: Number(judgeId),
         nextHearingDate: nextHearingDate || null
       }
-      const result = await adminAssignCase(token, caseId, payload)
-      setAssignResult(result)
+      await adminAssignCase(token, caseId, payload)
+      setAssignResult('Case assigned successfully')
     } catch (e) {
       setAssignErr(e.message)
     }
@@ -176,12 +179,15 @@ export default function AdminDashboard({ token }) {
                 ))}
               </select>
             </label>
-            <label>Next Hearing Date (YYYY-MM-DD)<input value={nextHearingDate} onChange={(e) => setNextHearingDate(e.target.value)} /></label>
+            <label>
+              Next Hearing Date
+              <input type="date" value={nextHearingDate} min={todayStr} onChange={(e) => setNextHearingDate(e.target.value)} />
+            </label>
             <button type="submit" disabled={!token || !caseId}>Assign</button>
           </form>
           {listsErr && <div className="error">{listsErr}</div>}
           {assignErr && <div className="error">{assignErr}</div>}
-          {assignResult && <pre className="result">{JSON.stringify(assignResult, null, 2)}</pre>}
+          {assignResult && <div className="success">{assignResult}</div>}
         </section>
       )
     },

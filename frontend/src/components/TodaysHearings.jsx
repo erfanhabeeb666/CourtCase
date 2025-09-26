@@ -19,6 +19,7 @@ export default function TodaysHearings({ token }) {
   const [detailsMap, setDetailsMap] = useState({}) // { [caseId]: { loading, error, hearings, documents } }
   const [uploadMap, setUploadMap] = useState({}) // { [caseId]: { file, note, uploading, error, ok } }
   const [viewer, setViewer] = useState({ open: false, url: '', name: '' })
+  const todayStr = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
     // Auto-load today's hearings when token is available
@@ -211,16 +212,7 @@ export default function TodaysHearings({ token }) {
                 {isOpen && (
                   <div className="card" style={{ marginTop: 8 }}>
                     <div className="form-grid">
-                      <label>
-                        Hearing Date (YYYY-MM-DD)
-                        <input
-                          value={form.hearingDate}
-                          onChange={(e) =>
-                            setFormField(it.hearing.id, 'hearingDate', e.target.value)
-                          }
-                          placeholder="optional"
-                        />
-                      </label>
+                    
                       <label>
                         Judge Summary
                         <input
@@ -232,13 +224,14 @@ export default function TodaysHearings({ token }) {
                         />
                       </label>
                       <label>
-                        Next Hearing Date (YYYY-MM-DD)
+                        Next Hearing Date
                         <input
+                          type="date"
                           value={form.nextHearingDate}
+                          min={todayStr}
                           onChange={(e) =>
                             setFormField(it.hearing.id, 'nextHearingDate', e.target.value)
                           }
-                          placeholder="optional"
                         />
                       </label>
                       <label>
@@ -252,13 +245,13 @@ export default function TodaysHearings({ token }) {
                         />
                       </label>
                       <label>
-                        Verdict Date (YYYY-MM-DD)
+                        Verdict Date
                         <input
+                          type="date"
                           value={form.verdictDate}
                           onChange={(e) =>
                             setFormField(it.hearing.id, 'verdictDate', e.target.value)
                           }
-                          placeholder="optional"
                         />
                       </label>
                       <button

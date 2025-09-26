@@ -9,6 +9,7 @@ export default function UpdateHearingForm({ token, caseId, hearingId }) {
   const [verdictDate, setVerdictDate] = useState('')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const todayStr = new Date().toISOString().slice(0, 10)
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -34,24 +35,24 @@ export default function UpdateHearingForm({ token, caseId, hearingId }) {
       <h2>Update Hearing</h2>
       <form onSubmit={onSubmit} className="form-grid">
         <label>
-          Hearing Date (YYYY-MM-DD)
-          <input value={hearingDate} onChange={(e) => setHearingDate(e.target.value)} placeholder="optional" />
+          Hearing Date
+          <input type="date" value={hearingDate} onChange={(e) => setHearingDate(e.target.value)} placeholder="optional" />
         </label>
         <label>
           Judge Summary
           <input value={judgeSummary} onChange={(e) => setJudgeSummary(e.target.value)} placeholder="optional" />
         </label>
         <label>
-          Next Hearing Date (YYYY-MM-DD)
-          <input value={nextHearingDate} onChange={(e) => setNextHearingDate(e.target.value)} placeholder="optional" />
+          Next Hearing Date
+          <input type="date" value={nextHearingDate} min={todayStr} onChange={(e) => setNextHearingDate(e.target.value)} placeholder="optional" />
         </label>
         <label>
           Verdict
           <input value={verdict} onChange={(e) => setVerdict(e.target.value)} placeholder="optional" />
         </label>
         <label>
-          Verdict Date (YYYY-MM-DD)
-          <input value={verdictDate} onChange={(e) => setVerdictDate(e.target.value)} placeholder="optional" />
+          Verdict Date
+          <input type="date" value={verdictDate} onChange={(e) => setVerdictDate(e.target.value)} placeholder="optional" />
         </label>
         <button type="submit" disabled={!token || !caseId || !hearingId}>Submit</button>
       </form>
