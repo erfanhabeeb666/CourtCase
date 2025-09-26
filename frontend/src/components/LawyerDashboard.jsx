@@ -63,14 +63,16 @@ export default function LawyerDashboard({ token }) {
       setError(String(e.message || e))
     }
   }
-
   // My Cases state
   const [myCases, setMyCases] = useState([])
   const [myCasesLoading, setMyCasesLoading] = useState(false)
   const [myCasesErr, setMyCasesErr] = useState('')
+  const [page, setPage] = useState(1)
+  const pageSize = 5
+  const [myCasesSearch, setMyCasesSearch] = useState('')
   const [openCaseId, setOpenCaseId] = useState(null)
   const [detailsMap, setDetailsMap] = useState({}) // { [caseId]: { loading, error, hearings, documents } }
-
+  
   // Search Case state
   const [searchId, setSearchId] = useState('')
   const [searchCase, setSearchCase] = useState(null)
@@ -152,6 +154,7 @@ export default function LawyerDashboard({ token }) {
     try {
       const data = await lawyerMyCases(token)
       setMyCases(data)
+      setPage(1)
     } catch (e) {
       setMyCasesErr(String(e.message || e))
     } finally {
@@ -314,14 +317,33 @@ export default function LawyerDashboard({ token }) {
       render: () => (
         <section className="card">
           <h2>My Cases</h2>
-          <button onClick={loadMyCases} disabled={!token || myCasesLoading}>{myCasesLoading ? 'Loading...' : 'Reload'}</button>
+          <div className="form-grid" style={{ alignItems: 'end' }}>
+            <label>
+              Search (ID or Title)
+              <input value={myCasesSearch} onChange={(e) => { setMyCasesSearch(e.target.value); setPage(1) }} placeholder="Type to filter" />
+            </label>
+            <div>
+              <button onClick={loadMyCases} disabled={!token || myCasesLoading}>{myCasesLoading ? 'Loading...' : 'Reload'}</button>
+            </div>
+          </div>
           {myCasesErr && <div className="error" style={{ marginTop: 8 }}>{myCasesErr}</div>}
           <div style={{ margin: '6px 0' }}>
             <small>Loaded {myCases.length} cases.</small>
           </div>
           {myCases.length > 0 ? (
             <ul>
-              {myCases.map(c => (
+              {(() => {
+                const needle = (myCasesSearch || '').toLowerCase()
+                const filtered = myCases.filter(c =>
+                  !needle || String(c.id).toLowerCase().includes(needle) || (c.title || '').toLowerCase().includes(needle)
+                )
+                const total = filtered.length
+                const totalPages = Math.max(1, Math.ceil(total / pageSize))
+                const curPage = Math.min(page, totalPages)
+                const start = (curPage - 1) * pageSize
+                const paginated = filtered.slice(start, start + pageSize)
+                return paginated
+              })().map(c => (
                 <li key={c.id} style={{ marginBottom: 12 }}>
                   <div><strong>Case:</strong> {c.title} — <strong>ID:</strong> {c.id} — <strong>Status:</strong> {c.status}</div>
                   <div><strong>Next Hearing:</strong> {c.nextHearingDate || '-'}</div>
@@ -462,6 +484,20 @@ export default function LawyerDashboard({ token }) {
           ) : (
             <p>No cases found.</p>
           )}
+
+          {(() => {
+            const needle = (myCasesSearch || '').toLowerCase()
+            const total = myCases.filter(c => !needle || String(c.id).toLowerCase().includes(needle) || (c.title || '').toLowerCase().includes(needle)).length
+            const totalPages = Math.max(1, Math.ceil(total / pageSize))
+            if (total === 0) return null
+            return (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>Prev</button>
+                <span>Page {page} of {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</button>
+              </div>
+            )
+          })()}
         </section>
       )
     },

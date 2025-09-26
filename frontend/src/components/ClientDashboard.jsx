@@ -14,6 +14,10 @@ export default function ClientDashboard({ token }) {
 
   const [cases, setCases] = useState([])
   const [listErr, setListErr] = useState('')
+  // Search and pagination for My Cases
+  const [caseSearch, setCaseSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(5)
 
   // Documents per case (client view)
   const [openCaseId, setOpenCaseId] = useState(null)
@@ -173,11 +177,26 @@ export default function ClientDashboard({ token }) {
       render: () => (
         <section className="card">
           <h2>My Cases</h2>
-          <button onClick={loadMyCases}>Load</button>
+          <div className="form-grid" style={{ alignItems: 'end' }}>
+            <label>
+              Search by Case ID
+              <input value={caseSearch} onChange={(e) => { setCaseSearch(e.target.value); setPage(1) }} placeholder="Enter case number" />
+            </label>
+            <div>
+              <button onClick={loadMyCases}>Reload</button>
+            </div>
+          </div>
           {listErr && <div className="error">{listErr}</div>}
-          {cases.length > 0 && (
+          {(() => {
+            const filtered = (cases || []).filter(c => !caseSearch || String(c.id).toLowerCase().includes(caseSearch.toLowerCase()))
+            const total = filtered.length
+            const totalPages = Math.max(1, Math.ceil(total / pageSize))
+            const curPage = Math.min(page, totalPages)
+            const start = (curPage - 1) * pageSize
+            const paginated = filtered.slice(start, start + pageSize)
+            return (
             <ul>
-              {cases.map(c => (
+              {paginated.map(c => (
                 <li key={c.id}>
                   <div><strong>{c.title}</strong> — <strong>ID:</strong> {c.id} — Status: {c.status} — Next: {c.nextHearingDate || '-'}</div>
                   <button style={{ marginTop: 6 }} onClick={() => toggleDocs(c.id)}>
@@ -237,8 +256,24 @@ export default function ClientDashboard({ token }) {
                   )}
                 </li>
               ))}
+              {total === 0 && (
+                <li>No cases found</li>
+              )}
             </ul>
-          )}
+            )
+          })()}
+          {(() => {
+            const total = (cases || []).filter(c => !caseSearch || String(c.id).toLowerCase().includes(caseSearch.toLowerCase())).length
+            const totalPages = Math.max(1, Math.ceil(total / pageSize))
+            if (total === 0) return null
+            return (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>Prev</button>
+                <span>Page {page} of {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</button>
+              </div>
+            )
+          })()}
         </section>
       )
     }
