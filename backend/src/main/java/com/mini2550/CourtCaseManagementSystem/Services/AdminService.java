@@ -96,7 +96,7 @@ public class AdminService {
     }
 
     @Transactional
-    public CaseDto assignCaseByAdmin(Long caseId, AssignCaseRequest request) {
+    public CaseDto assignCaseByAdmin(String caseId, AssignCaseRequest request) {
         Case courtCase = caseRepository.findById(caseId)
                 .orElseThrow(() -> new RuntimeException("Case not found"));
 

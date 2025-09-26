@@ -123,7 +123,7 @@ package com.mini2550.CourtCaseManagementSystem.Services;
      }
 
      @Override
-     public List<DocumentDto> getDocuments(Long caseId) {
+     public List<DocumentDto> getDocuments(String caseId) {
          Long clientId = Long.valueOf(jwtService.extractId(jwtUtils.getJwtFromRequest(request)));
          User client = userRepository.findById(clientId).orElseThrow();
          Case c = caseRepository.findById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));

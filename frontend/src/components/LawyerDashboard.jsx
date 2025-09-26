@@ -20,7 +20,7 @@ export default function LawyerDashboard({ token }) {
       if (!token || !caseId) { setUploadDocs([]); setUploadDocsErr(''); return }
       setUploadDocsErr(''); setUploadDocsLoading(true)
       try {
-        const docs = await lawyerGetDocuments(token, Number(caseId))
+        const docs = await lawyerGetDocuments(token, caseId)
         setUploadDocs(docs)
       } catch (e) {
         setUploadDocsErr(String(e.message || e))
@@ -133,7 +133,7 @@ export default function LawyerDashboard({ token }) {
       if (caseId) {
         setUploadDocsErr(''); setUploadDocsLoading(true)
         try {
-          const docs = await lawyerGetDocuments(token, Number(caseId))
+          const docs = await lawyerGetDocuments(token, caseId)
           setUploadDocs(docs)
         } catch (e) {
           setUploadDocsErr(String(e.message || e))
@@ -185,11 +185,11 @@ export default function LawyerDashboard({ token }) {
     setSearchErr(''); setSearchCase(null); setSearchHearings([]); setSearchDocuments([])
     if (!searchId) { setSearchErr('Enter case ID'); return }
     try {
-      const c = await lawyerGetCase(token, Number(searchId))
+      const c = await lawyerGetCase(token, searchId)
       setSearchCase(c)
       const [hs, ds] = await Promise.all([
-        lawyerGetHearings(token, Number(searchId)),
-        lawyerGetDocuments(token, Number(searchId))
+        lawyerGetHearings(token, searchId),
+        lawyerGetDocuments(token, searchId)
       ])
       setSearchHearings(hs)
       setSearchDocuments(ds)
@@ -241,7 +241,7 @@ export default function LawyerDashboard({ token }) {
           <form onSubmit={onSubmit} className="form-grid">
             <label>
               Case ID
-              <input type="number" value={caseId} onChange={(e) => setCaseId(e.target.value)} required />
+              <input type="text" value={caseId} onChange={(e) => setCaseId(e.target.value)} required />
             </label>
             <label>
               File
@@ -267,14 +267,14 @@ export default function LawyerDashboard({ token }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span>{d.fileName} — {d.note || ''} — {d.uploadedAt}</span>
                       <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 6 }}>
-                        <button className="btn-inline" onClick={() => openPdfViewer(d, Number(caseId) || null)}>View</button>
+                        <button className="btn-inline" onClick={() => openPdfViewer(d, caseId || null)}>View</button>
                         <button className="btn-inline" onClick={() => download(d)}>Download</button>
                         {currentUser && d.uploaderId === currentUser.id && (
-                          <button className="btn-inline danger" onClick={() => onDeleteDoc(d, Number(caseId) || null)}>Delete</button>
+                          <button className="btn-inline danger" onClick={() => onDeleteDoc(d, caseId || null)}>Delete</button>
                         )}
                       </span>
                     </div>
-                    {viewer.open && viewer.docId === d.id && (viewer.caseId === Number(caseId) || viewer.caseId == null) && (
+                    {viewer.open && viewer.docId === d.id && (viewer.caseId === caseId || viewer.caseId == null) && (
                       <div className="card" style={{ marginTop: 8 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <h3 style={{ margin: 0 }}>{viewer.name}</h3>
@@ -475,7 +475,7 @@ export default function LawyerDashboard({ token }) {
           <form className="form-grid" onSubmit={doSearch}>
             <label>
               Case ID
-              <input type="number" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
+              <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
             </label>
             <button type="submit" disabled={!token || !searchId}>Search</button>
           </form>
@@ -503,11 +503,11 @@ export default function LawyerDashboard({ token }) {
                           )}
                         </span>
                         <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 6 }}>
-                          <button className="btn-inline" onClick={() => openPdfViewer(d, searchCase?.id || Number(searchId))}>View</button>
+                          <button className="btn-inline" onClick={() => openPdfViewer(d, searchCase?.id || searchId)}>View</button>
                           <button className="btn-inline" onClick={() => download(d)}>Download</button>
                         </span>
                       </div>
-                      {viewer.open && viewer.docId === d.id && viewer.caseId === (searchCase?.id || Number(searchId)) && (
+                      {viewer.open && viewer.docId === d.id && viewer.caseId === (searchCase?.id || searchId) && (
                         <div className="card" style={{ marginTop: 8 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ margin: 0 }}>{viewer.name}</h3>

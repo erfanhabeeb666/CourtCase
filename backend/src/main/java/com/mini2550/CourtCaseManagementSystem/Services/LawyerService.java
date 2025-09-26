@@ -61,14 +61,14 @@ public class LawyerService {
         return cases.stream().map(this::toCaseDto).collect(Collectors.toList());
     }
 
-    public com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto getCase(Long caseId) {
+    public com.mini2550.CourtCaseManagementSystem.Dtos.CaseDto getCase(String caseId) {
         User lawyer = getCurrentUser();
         Case c = caseRepository.findById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
         if (!isLawyerOnCase(lawyer, c)) throw new RuntimeException("Not authorized for this case");
         return toCaseDto(c);
     }
 
-    public List<HearingDto> getHearings(Long caseId) {
+    public List<HearingDto> getHearings(String caseId) {
         User lawyer = getCurrentUser();
         Case c = caseRepository.findById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
         if (!isLawyerOnCase(lawyer, c)) throw new RuntimeException("Not authorized for this case");
@@ -76,7 +76,7 @@ public class LawyerService {
                 .stream().map(this::toHearingDto).collect(Collectors.toList());
     }
 
-    public List<DocumentDto> getDocuments(Long caseId) {
+    public List<DocumentDto> getDocuments(String caseId) {
         User lawyer = getCurrentUser();
         Case c = caseRepository.findById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
         if (!isLawyerOnCase(lawyer, c)) throw new RuntimeException("Not authorized for this case");

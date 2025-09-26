@@ -46,7 +46,7 @@ public class ClientController {
     }
 
     @GetMapping("/cases/{caseId}/documents")
-    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable Long caseId) {
+    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable String caseId) {
         return ResponseEntity.ok(clientService.getDocuments(caseId));
     }
 

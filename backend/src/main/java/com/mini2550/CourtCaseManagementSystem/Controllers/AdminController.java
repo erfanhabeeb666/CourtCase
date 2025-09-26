@@ -37,7 +37,7 @@ public class AdminController {
         }
     }
     @PutMapping("/cases/{caseId}/assign")
-    public CaseDto assignCase(@PathVariable Long caseId, @RequestBody AssignCaseRequest request) {
+    public CaseDto assignCase(@PathVariable String caseId, @RequestBody AssignCaseRequest request) {
         return adminService.assignCaseByAdmin(caseId, request);
     }
 

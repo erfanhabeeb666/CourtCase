@@ -35,17 +35,17 @@ public class LawyerController {
     }
 
     @GetMapping("/cases/{caseId}")
-    public ResponseEntity<CaseDto> getCase(@PathVariable Long caseId) {
+    public ResponseEntity<CaseDto> getCase(@PathVariable String caseId) {
         return ResponseEntity.ok(lawyerService.getCase(caseId));
     }
 
     @GetMapping("/cases/{caseId}/hearings")
-    public ResponseEntity<List<HearingDto>> getHearings(@PathVariable Long caseId) {
+    public ResponseEntity<List<HearingDto>> getHearings(@PathVariable String caseId) {
         return ResponseEntity.ok(lawyerService.getHearings(caseId));
     }
 
     @GetMapping("/cases/{caseId}/documents")
-    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable Long caseId) {
+    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable String caseId) {
         return ResponseEntity.ok(lawyerService.getDocuments(caseId));
     }
 }

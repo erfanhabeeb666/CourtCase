@@ -26,11 +26,11 @@ export default function UploadDocument({ token }) {
       <form onSubmit={onSubmit} className="form-grid">
         <label>
           Case ID
-          <input type="number" value={caseId} onChange={(e) => setCaseId(e.target.value)} />
+          <input type="text" value={caseId} onChange={(e) => setCaseId(e.target.value)} />
         </label>
         <label>
           File
-          <input type="file" onChange={(e) => setFile(e.target.files?.[0])} />
+          <input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0])} />
         </label>
         <label>
           Note

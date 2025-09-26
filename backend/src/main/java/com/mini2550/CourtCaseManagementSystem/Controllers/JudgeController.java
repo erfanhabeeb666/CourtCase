@@ -29,21 +29,21 @@ public class JudgeController {
     }
 
     @GetMapping("/cases/{caseId}/hearings")
-    public ResponseEntity<List<HearingDto>> getHearings(@PathVariable Long caseId) {
+    public ResponseEntity<List<HearingDto>> getHearings(@PathVariable String caseId) {
         return ResponseEntity.ok(judgeService.getHearings(caseId));
     }
 
     // Unified update hearing API: update hearing details, schedule next, or submit verdict
     @PutMapping("/cases/{caseId}/hearings/{hearingId}")
     public ResponseEntity<HearingDto> updateHearing(
-            @PathVariable Long caseId,
+            @PathVariable String caseId,
             @PathVariable Long hearingId,
             @RequestBody HearingUpdateRequest request) {
         return ResponseEntity.ok(judgeService.updateHearing(caseId, hearingId, request));
     }
 
     @GetMapping("/cases/{caseId}/documents")
-    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable Long caseId) {
+    public ResponseEntity<List<DocumentDto>> getDocuments(@PathVariable String caseId) {
         return ResponseEntity.ok(judgeService.getDocuments(caseId));
     }
 

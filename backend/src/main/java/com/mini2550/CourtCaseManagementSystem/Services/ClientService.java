@@ -14,5 +14,5 @@ public interface ClientService {
     List<CaseDto> getMyCases();
     List<UserSummaryDto> listLawyers();
     void uploadDocument(UploadDocumentRequest request);
-    List<DocumentDto> getDocuments(Long caseId);
+    List<DocumentDto> getDocuments(String caseId);
 }

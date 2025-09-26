@@ -5,7 +5,7 @@ import com.mini2550.CourtCaseManagementSystem.Enums.CaseStatus;
 import java.time.LocalDate;
 
 public class CaseDto {
-    private long id;
+    private String id;
     private String title;
     private String type;
     private String clientName;
@@ -19,11 +19,11 @@ public class CaseDto {
     private String verdict;
     private LocalDate verdictDate;
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -5,6 +5,8 @@ import com.mini2550.CourtCaseManagementSystem.Enums.CaseStatus;
 import com.mini2550.CourtCaseManagementSystem.Enums.CaseType;
 import com.mini2550.CourtCaseManagementSystem.Enums.Status;
 import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +14,14 @@ import java.util.List;
     @Entity
     public class Case {
         @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
+        @GeneratedValue(generator = "case-id-generator")
+        @GenericGenerator(
+                name = "case-id-generator",
+                strategy = "com.mini2550.CourtCaseManagementSystem.Utils.CaseIdGenerator"
+        )
+        @Column(name = "id", unique = true, nullable = false)
+        private String id;   // must be String now
+
 
         private String title;
 
@@ -56,11 +64,11 @@ import java.util.List;
             this.deleteStatus = deleteStatus;
         }
 
-        public Long getId() {
+        public String getId() {
             return id;
         }
 
-        public void setId(Long id) {
+        public void setId(String id) {
             this.id = id;
         }
 

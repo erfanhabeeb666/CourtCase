@@ -304,7 +304,7 @@ export async function clientMyCases(token) {
 
 // Client: list documents for a case
 export async function clientGetDocuments(token, caseId) {
-  const url = `${BASE_URL}/client/cases/${Number(caseId)}/documents`
+  const url = `${BASE_URL}/client/cases/${caseId}/documents`
   const res = await fetch(url, {
     headers: { ...authHeaders(token) }
   })

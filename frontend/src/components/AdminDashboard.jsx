@@ -102,7 +102,7 @@ export default function AdminDashboard({ token }) {
         judgeId: Number(judgeId),
         nextHearingDate: nextHearingDate || null
       }
-      const result = await adminAssignCase(token, Number(caseId), payload)
+      const result = await adminAssignCase(token, caseId, payload)
       setAssignResult(result)
     } catch (e) {
       setAssignErr(e.message)

@@ -60,14 +60,14 @@ public class JudgeService {
     // Removed generic addHearing API in favor of scheduling only the next hearing
 
 
-    public List<HearingDto> getHearings(Long caseId) {
+    public List<HearingDto> getHearings(String caseId) {
         User judge = getCurrentUser();
         Case courtCase = getAuthorizedCase(caseId, judge);
         return hearingRepository.findByCourtCaseOrderByHearingDateAsc(courtCase)
                 .stream().map(this::toHearingDto).collect(Collectors.toList());
     }
 
-    public HearingDto updateHearing(Long caseId, Long hearingId, HearingUpdateRequest request) {
+    public HearingDto updateHearing(String caseId, Long hearingId, HearingUpdateRequest request) {
         User judge = getCurrentUser();
         Case courtCase = getAuthorizedCase(caseId, judge);
         Hearing hearing = hearingRepository.findById(hearingId).orElseThrow(() -> new RuntimeException("Hearing not found"));
@@ -128,7 +128,7 @@ public class JudgeService {
         return toHearingDto(hearing);
     }
 
-    public List<DocumentDto> getDocuments(Long caseId) {
+    public List<DocumentDto> getDocuments(String caseId) {
         User judge = getCurrentUser();
         Case courtCase = getAuthorizedCase(caseId, judge);
         return documentRepository.findByCourtCase(courtCase).stream().map(this::toDocumentDto).collect(Collectors.toList());
@@ -168,7 +168,7 @@ public class JudgeService {
         return userRepository.findById(userId).orElseThrow();
     }
 
-    private Case getAuthorizedCase(Long caseId, User judge) {
+    private Case getAuthorizedCase(String caseId, User judge) {
         Case courtCase = caseRepository.findById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
         if (courtCase.getJudge() == null || !courtCase.getJudge().getId().equals(judge.getId())) {
             throw new RuntimeException("Not authorized for this case");
